@@ -112,7 +112,7 @@ function GhostRadioWaves({ active, air, low, progress }: { active: boolean; air:
     <div className="relative mt-3 h-20 rounded border border-green-400/10 bg-green-400/[0.018] overflow-hidden">
       <div className="absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(rgba(0,255,136,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.08) 1px, transparent 1px)", backgroundSize: "18px 18px" }} />
       <div className="absolute inset-0" style={{ background: "radial-gradient(circle at 50% 50%, rgba(155,89,255,0.12), transparent 48%)" }} />
-      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
+      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full pointer-events-none" preserveAspectRatio="none">
         {waves.map((wave, index) => (
           <path
             key={index}
@@ -218,20 +218,21 @@ function SlsScreen({ active, features, progress }: { active: boolean; features: 
         muted
         playsInline
         autoPlay
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         style={{ opacity: status === "ready" ? 0.46 : 0, filter: "grayscale(1) contrast(1.35) brightness(0.72) hue-rotate(205deg)" }}
       />
-      <div className="absolute inset-0" style={{ background: status === "ready" ? "linear-gradient(180deg, rgba(1,4,12,0.20), rgba(1,4,12,0.52))" : "radial-gradient(circle at 50% 40%, rgba(155,89,255,0.16), transparent 42%)" }} />
-      <div className="absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(rgba(155,89,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.12) 1px, transparent 1px)", backgroundSize: "18px 18px" }} />
-      <div className="absolute inset-0 opacity-25" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.36) 3px, rgba(0,0,0,0.36) 5px)" }} />
-      <div className="absolute left-2 top-2 text-[8px] font-mono tracking-[0.22em] text-purple-300/70 uppercase">SLS CAMERA LAYER</div>
+      <div className="absolute inset-0 pointer-events-none" style={{ background: status === "ready" ? "linear-gradient(180deg, rgba(1,4,12,0.20), rgba(1,4,12,0.52))" : "radial-gradient(circle at 50% 40%, rgba(155,89,255,0.16), transparent 42%)" }} />
+      <div className="absolute inset-0 opacity-35 pointer-events-none" style={{ backgroundImage: "linear-gradient(rgba(155,89,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.12) 1px, transparent 1px)", backgroundSize: "18px 18px" }} />
+      <div className="absolute inset-0 opacity-25 pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.36) 3px, rgba(0,0,0,0.36) 5px)" }} />
+      <div className="absolute left-2 top-2 text-[8px] font-mono tracking-[0.22em] text-purple-300/70 uppercase pointer-events-none">SLS CAMERA LAYER</div>
 
       {status !== "ready" && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-3 text-center">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 px-3 text-center">
           <button
+            type="button"
             onClick={startCamera}
             className="rounded border px-3 py-2 text-[9px] font-mono uppercase tracking-[0.18em]"
-            style={{ borderColor: "#9b59ff55", color: "#cbb7ff", background: "rgba(155,89,255,0.10)", boxShadow: "0 0 14px #9b59ff22" }}
+            style={{ borderColor: "#9b59ff55", color: "#cbb7ff", background: "rgba(155,89,255,0.16)", boxShadow: "0 0 16px #9b59ff44" }}
           >
             {status === "loading" ? "Ouverture caméra..." : "Activer caméra SLS"}
           </button>
@@ -242,21 +243,22 @@ function SlsScreen({ active, features, progress }: { active: boolean; features: 
 
       {status === "ready" && (
         <button
+          type="button"
           onClick={stopCamera}
-          className="absolute right-2 top-2 rounded border px-2 py-1 text-[7px] font-mono uppercase tracking-[0.16em]"
+          className="absolute right-2 top-2 z-20 rounded border px-2 py-1 text-[7px] font-mono uppercase tracking-[0.16em]"
           style={{ borderColor: "#00d4ff33", color: "#9eefff", background: "rgba(0,0,0,0.35)" }}
         >
           cam off
         </button>
       )}
 
-      <svg viewBox="0 0 100 86" className="absolute inset-0 w-full h-full" style={{ filter: showMain ? "drop-shadow(0 0 8px rgba(155,89,255,0.45))" : "none", opacity: status === "ready" || showMain ? 1 : 0.28 }}>
+      <svg viewBox="0 0 100 86" className="absolute inset-0 w-full h-full pointer-events-none" style={{ filter: showMain ? "drop-shadow(0 0 8px rgba(155,89,255,0.45))" : "none", opacity: status === "ready" || showMain ? 1 : 0.28 }}>
         <StickFigure index={0} active={showMain} stability={formLock} />
         {hasExtra && <StickFigure index={1} active={active} stability={stability * 0.7} />}
         {formLock > 70 && <StickFigure index={2} active={active} stability={stability * 0.52} />}
       </svg>
 
-      <div className="absolute bottom-2 left-2 right-2 grid grid-cols-2 gap-2">
+      <div className="absolute bottom-2 left-2 right-2 grid grid-cols-2 gap-2 pointer-events-none">
         <MetricRow label="FORM" value={`${Math.round(formLock)}%`} color={VIOLET} />
         <MetricRow label="JOINT" value={stability > 55 ? "PARTIAL" : "UNSTABLE"} color={stability > 55 ? GREEN : CYAN} />
       </div>
