@@ -71,11 +71,23 @@ function getPhaseLabel(state: AnalysisState, lang: Lang) {
   return lang === "fr" ? "EN COURS" : "IN PROGRESS";
 }
 
+function pendingSignature(lang: Lang) {
+  if (lang === "en") return "Trace signature";
+  if (lang === "es") return "Firma de traza";
+  return "Signature de trace";
+}
+
+function pendingClassification(lang: Lang) {
+  if (lang === "en") return "Resonance pending";
+  if (lang === "es") return "Resonancia pendiente";
+  return "Résonance en attente";
+}
+
 export function SpeciesPanel({ state, lang }: { state: AnalysisState; lang: Lang }) {
   const t = UI_LABELS[lang];
   const active = isActive(state);
-  const commonName = state.species?.scientificName?.[lang] || state.detectedSpecies || (state.isListening ? "Signature aviaire" : "");
-  const latinName = state.species?.name || (state.isListening ? "Classification progressive" : "");
+  const commonName = state.species?.scientificName?.[lang] || state.detectedSpecies || (state.isListening ? pendingSignature(lang) : "");
+  const latinName = state.species?.name || (state.isListening ? pendingClassification(lang) : "");
   const confidence = state.isComplete ? state.confidence : liveProgress(state, state.speciesConfidence || 34);
 
   return (
