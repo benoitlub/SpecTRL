@@ -74,8 +74,35 @@
 }
 
 @layer utilities {
-  .spectrl-sensor-compact {
+  .spectrl-sensor-compact,
+  main > section.grid {
     grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 0.82fr) !important;
+  }
+
+  main > section.grid > div {
+    padding: 0.625rem !important;
+  }
+
+  main > section.grid > div:nth-child(1) .h-20,
+  main > section.grid > div:nth-child(2) .h-20 {
+    height: 3.5rem !important;
+  }
+
+  main > section.grid > div:nth-child(3) {
+    grid-row: span 2 / span 2;
+  }
+
+  main > section.grid > div:nth-child(3) .aspect-square {
+    max-height: 12rem;
+  }
+
+  @media (min-width: 640px) {
+    main > section.grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+    main > section.grid > div:nth-child(3) {
+      grid-row: auto;
+    }
   }
 }
 
