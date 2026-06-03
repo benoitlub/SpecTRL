@@ -3,6 +3,7 @@ import { useAudioAnalysis } from "../hooks/useAudioAnalysis";
 import { ParticleField } from "../components/ParticleField";
 import { MicButton } from "../components/MicButton";
 import { TranslationCard } from "../components/TranslationCard";
+import { IntroOverlay } from "../components/IntroOverlay";
 import { UI_LABELS, type Lang } from "../data/animals";
 import {
   SpeciesPanel,
@@ -19,8 +20,15 @@ function ScannerLines() {
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)",
-          backgroundSize: "100% 4px",
+          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 5px)",
+          backgroundSize: "100% 5px",
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: "linear-gradient(rgba(0,212,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(155,89,255,0.035) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
         }}
       />
     </div>
@@ -30,9 +38,9 @@ function ScannerLines() {
 function GlitchOverlay({ active }: { active: boolean }) {
   if (!active) return null;
   return (
-    <div className="pointer-events-none fixed inset-0" style={{ zIndex: 50, background: "rgba(0, 212, 255, 0.03)", mixBlendMode: "screen" }}>
-      <div className="absolute" style={{ top: `${20 + Math.random() * 60}%`, left: 0, right: 0, height: "2px", background: "rgba(255, 140, 0, 0.4)", transform: `translateX(${(Math.random() - 0.5) * 20}px)` }} />
-      <div className="absolute" style={{ top: `${30 + Math.random() * 40}%`, left: 0, right: 0, height: "1px", background: "rgba(0, 212, 255, 0.3)", transform: `translateX(${(Math.random() - 0.5) * 30}px)` }} />
+    <div className="pointer-events-none fixed inset-0" style={{ zIndex: 50, background: "rgba(155, 89, 255, 0.04)", mixBlendMode: "screen" }}>
+      <div className="absolute" style={{ top: `${20 + Math.random() * 60}%`, left: 0, right: 0, height: "2px", background: "rgba(255, 140, 0, 0.42)", transform: `translateX(${(Math.random() - 0.5) * 20}px)` }} />
+      <div className="absolute" style={{ top: `${30 + Math.random() * 40}%`, left: 0, right: 0, height: "1px", background: "rgba(0, 212, 255, 0.35)", transform: `translateX(${(Math.random() - 0.5) * 30}px)` }} />
     </div>
   );
 }
@@ -40,8 +48,8 @@ function GlitchOverlay({ active }: { active: boolean }) {
 function CrypticTicker({ message }: { message: string }) {
   if (!message) return null;
   return (
-    <div className="text-[7px] font-mono tracking-[0.36em] uppercase px-2.5 py-0.5 rounded-sm border leading-tight" style={{ color: "#ff8c0088", borderColor: "#ff8c0022", background: "#ff8c0008", animation: "fadeInOut 4s ease-in-out" }}>
-      ▲ {message} ▲
+    <div className="text-[7px] font-mono tracking-[0.36em] uppercase px-2.5 py-0.5 rounded-sm border leading-tight" style={{ color: "#b78cff99", borderColor: "#9b59ff33", background: "#9b59ff0d", animation: "fadeInOut 4s ease-in-out" }}>
+      ◇ {message} ◇
     </div>
   );
 }
@@ -51,15 +59,16 @@ function FeuchEmblem() {
     <div
       className="hidden xs:flex w-12 h-12 shrink-0 items-center justify-center rounded-xl border"
       style={{
-        borderColor: "#00d4ff55",
-        background: "radial-gradient(circle at 50% 50%, rgba(0,212,255,0.12), rgba(2,8,20,0.3))",
-        boxShadow: "0 0 18px #00d4ff22, inset 0 0 16px #00d4ff11",
+        borderColor: "#9b59ff66",
+        background: "radial-gradient(circle at 50% 50%, rgba(155,89,255,0.16), rgba(2,8,20,0.3))",
+        boxShadow: "0 0 20px #9b59ff24, inset 0 0 16px #00d4ff14",
         clipPath: "polygon(18% 0, 82% 0, 100% 30%, 100% 70%, 82% 100%, 18% 100%, 0 70%, 0 30%)",
       }}
     >
-      <svg viewBox="0 0 64 64" className="w-8 h-8" fill="none" stroke="#00d4ff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: "drop-shadow(0 0 7px #00d4ff88)" }}>
+      <svg viewBox="0 0 64 64" className="w-8 h-8" fill="none" stroke="#b78cff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: "drop-shadow(0 0 7px #9b59ff99)" }}>
         <path d="M8 36h9l5-16 8 30 8-38 7 24h11" />
-        <path d="M18 48c10 7 19 7 28 0" stroke="#ff8c00" strokeWidth="2" opacity="0.8" />
+        <path d="M20 49c8-5 16-5 24 0" stroke="#00d4ff" strokeWidth="2" opacity="0.85" />
+        <circle cx="32" cy="30" r="5" stroke="#ff8c00" strokeWidth="2" opacity="0.75" />
       </svg>
     </div>
   );
@@ -75,7 +84,7 @@ function LangSelector({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => v
     <div className="flex items-center gap-1.5">
       <span className="text-[8px] font-mono text-gray-500 tracking-widest">{UI_LABELS[lang].lang}</span>
       {opts.map(o => (
-        <button key={o.v} onClick={() => onChange(o.v)} className="text-[9px] font-mono px-1.5 py-0.5 rounded border transition-all duration-200" style={{ borderColor: lang === o.v ? "#00d4ff55" : "#ffffff11", color: lang === o.v ? "#00d4ff" : "#ffffff44", background: lang === o.v ? "rgba(0,212,255,0.08)" : "transparent", boxShadow: lang === o.v ? "0 0 6px #00d4ff22" : "none" }}>
+        <button key={o.v} onClick={() => onChange(o.v)} className="text-[9px] font-mono px-1.5 py-0.5 rounded border transition-all duration-200" style={{ borderColor: lang === o.v ? "#9b59ff66" : "#ffffff11", color: lang === o.v ? "#d6c0ff" : "#ffffff44", background: lang === o.v ? "rgba(155,89,255,0.10)" : "transparent", boxShadow: lang === o.v ? "0 0 6px #9b59ff22" : "none" }}>
           {o.l}
         </button>
       ))}
@@ -97,20 +106,20 @@ function Header({ glitch, lang, onLangChange }: { glitch: boolean; lang: Lang; o
       <div
         className="relative overflow-hidden rounded-b-xl border px-3 py-3"
         style={{
-          borderColor: "#00d4ff33",
-          background: "linear-gradient(180deg, rgba(2,10,24,0.98), rgba(0,12,30,0.86))",
-          boxShadow: "0 0 22px rgba(0,212,255,0.12), inset 0 0 22px rgba(0,212,255,0.05)",
+          borderColor: "#9b59ff40",
+          background: "linear-gradient(180deg, rgba(7,5,22,0.98), rgba(0,12,30,0.84))",
+          boxShadow: "0 0 26px rgba(155,89,255,0.13), inset 0 0 24px rgba(0,212,255,0.04)",
         }}
       >
-        <div className="absolute top-0 left-5 right-5 h-px" style={{ background: "linear-gradient(90deg, transparent, #00d4ff88, transparent)" }} />
-        <div className="absolute -right-10 -top-10 w-32 h-32 rounded-full" style={{ background: "radial-gradient(circle, rgba(0,212,255,0.08), transparent 60%)" }} />
+        <div className="absolute top-0 left-5 right-5 h-px" style={{ background: "linear-gradient(90deg, transparent, #9b59ffaa, transparent)" }} />
+        <div className="absolute -right-10 -top-10 w-32 h-32 rounded-full" style={{ background: "radial-gradient(circle, rgba(155,89,255,0.10), transparent 60%)" }} />
         <div className="flex items-center gap-3">
           <FeuchEmblem />
           <div className="min-w-0 flex-1">
-            <div className="text-xl sm:text-2xl font-mono font-bold tracking-[0.22em] uppercase leading-none truncate" style={{ color: "#00d4ff", textShadow: "0 0 14px #00d4ff99", filter: glitch ? "blur(0.5px)" : "none" }}>
+            <div className="text-xl sm:text-2xl font-mono font-bold tracking-[0.22em] uppercase leading-none truncate" style={{ color: "#d6c0ff", textShadow: "0 0 16px #9b59ff99", filter: glitch ? "blur(0.5px)" : "none" }}>
               {t.title}
             </div>
-            <div className="text-[8px] sm:text-[9px] font-mono tracking-[0.34em] text-orange-400/70 uppercase mt-1 truncate">
+            <div className="text-[8px] sm:text-[9px] font-mono tracking-[0.34em] text-cyan-300/65 uppercase mt-1 truncate">
               {t.subtitle}
             </div>
           </div>
@@ -134,7 +143,7 @@ function LedBar({ value, pending = false }: { value: number; pending?: boolean }
   return (
     <div className="flex gap-0.5 w-20 justify-end" aria-label={`${value}%`}>
       {Array.from({ length: 10 }, (_, i) => (
-        <span key={i} className="h-2 w-1.5 rounded-sm transition-all duration-200" style={{ background: i < lit ? (i > 7 ? "#ff8c00" : "#00d4ff") : "rgba(255,255,255,0.08)", boxShadow: i < lit ? `0 0 5px ${i > 7 ? "#ff8c00" : "#00d4ff"}` : "none", opacity: pending ? 0.22 : i < lit ? 0.95 : 0.35 }} />
+        <span key={i} className="h-2 w-1.5 rounded-sm transition-all duration-200" style={{ background: i < lit ? (i > 7 ? "#ff8c00" : "#9b59ff") : "rgba(255,255,255,0.08)", boxShadow: i < lit ? `0 0 5px ${i > 7 ? "#ff8c00" : "#9b59ff"}` : "none", opacity: pending ? 0.22 : i < lit ? 0.95 : 0.35 }} />
       ))}
     </div>
   );
@@ -210,20 +219,20 @@ function LiveSignalDashboard({ active, audioFeatures, detectedLabel, progress }:
   }, [hasSignal, detectedLabel, progress, signal, gossip, lowEnergy, habitat, audioFeatures]);
 
   return (
-    <div className="rounded border px-3 py-2 backdrop-blur-sm" style={{ borderColor: active ? "#00d4ff44" : "#ffffff11", background: "rgba(0,10,25,0.68)" }}>
+    <div className="rounded border px-3 py-2 backdrop-blur-sm" style={{ borderColor: active ? "#9b59ff55" : "#ffffff11", background: "rgba(5,5,22,0.70)" }}>
       <div className="flex items-center justify-between mb-1.5">
-        <div className="text-[9px] font-mono tracking-[0.32em] uppercase text-cyan-400/70">Signatures détectées</div>
+        <div className="text-[9px] font-mono tracking-[0.32em] uppercase text-purple-300/75">Signatures détectées</div>
         <div className="text-[8px] font-mono tracking-[0.22em] uppercase" style={{ color: active ? "#00ff88" : "#ffffff33" }}>{active ? "LIVE" : "VEILLE"}</div>
       </div>
       <div className="space-y-1">
         {signatureRows.map(row => {
-          const diode = row.tone === "primary" ? "#00ff88" : row.tone === "secondary" ? "#00d4ff" : row.tone === "warning" ? "#ff8c00" : "#ffffff33";
+          const diode = row.tone === "primary" ? "#00ff88" : row.tone === "secondary" ? "#9b59ff" : row.tone === "warning" ? "#ff8c00" : "#ffffff33";
           return (
             <div key={row.label} className="grid grid-cols-[10px_1fr_auto_34px] items-center gap-2 text-[9px] font-mono tracking-wider">
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: diode, boxShadow: row.pending ? "none" : `0 0 5px ${diode}` }} />
               <span className={`truncate uppercase ${row.pending ? "text-gray-600" : "text-gray-300"}`}>{row.label}</span>
               <LedBar value={row.value} pending={row.pending} />
-              <span className={`text-right ${row.pending ? "text-gray-600" : "text-cyan-300"}`}>{row.pending ? "--" : `${row.value}%`}</span>
+              <span className={`text-right ${row.pending ? "text-gray-600" : "text-purple-200"}`}>{row.pending ? "--" : `${row.value}%`}</span>
             </div>
           );
         })}
@@ -234,12 +243,19 @@ function LiveSignalDashboard({ active, audioFeatures, detectedLabel, progress }:
 
 export default function Home() {
   const { state, crypticMessage, audioFeatures, detectedLabel, lang, setLang, startListening, stopListening, reset } = useAudioAnalysis();
+  const [introOpen, setIntroOpen] = useState(() => window.localStorage.getItem("spectrl-intro-seen") !== "yes");
   const activeAudioFeatures = audioFeatures || state.audioFeatures;
   const micSignal = state.isComplete ? state.signalQuality : getSignalPercent(activeAudioFeatures, state.scanProgress);
   const micHabitat = state.environmentalScan ? state.environmentalScan.split("—")[0].replace("AMBIANCE :", "").trim() : inferHabitat(activeAudioFeatures, state.isListening || state.isAnalyzing);
 
+  const enterProtocol = () => {
+    window.localStorage.setItem("spectrl-intro-seen", "yes");
+    setIntroOpen(false);
+  };
+
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden flex flex-col" style={{ background: "radial-gradient(ellipse at 20% 20%, rgba(0,40,80,0.4) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(20,0,40,0.3) 0%, transparent 60%), #02060f", fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace" }}>
+    <div className="relative min-h-screen w-full overflow-x-hidden flex flex-col" style={{ background: "radial-gradient(ellipse at 15% 18%, rgba(155,89,255,0.24) 0%, transparent 45%), radial-gradient(ellipse at 85% 78%, rgba(0,212,255,0.16) 0%, transparent 52%), radial-gradient(ellipse at 50% 110%, rgba(255,140,0,0.08) 0%, transparent 48%), #01040c", fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace" }}>
+      {introOpen && <IntroOverlay onEnter={enterProtocol} />}
       <ParticleField active={state.isListening || state.isAnalyzing} />
       <ScannerLines />
       <GlitchOverlay active={state.glitchActive} />
