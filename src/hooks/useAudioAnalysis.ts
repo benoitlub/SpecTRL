@@ -9,23 +9,13 @@ import {
   type AudioFeatures,
   type Species,
 } from "../data/animals";
-import { FOREST_SPECIES } from "../data/forestSpecies";
-import { URBAN_BIRD_SPECIES } from "../data/urbanBirdSpecies";
 
-const EXTRA_SPECIES = [...FOREST_SPECIES, ...URBAN_BIRD_SPECIES];
-const ALL_SPECIES = [...SPECIES, ...EXTRA_SPECIES];
-const PIGEON_IDS = new Set(["pigeon", "wood_pigeon"]);
-const BIRD_IDS = new Set([
-  "crow", "pigeon", "duck", "owl",
-  ...FOREST_SPECIES.map(s => s.id),
-  ...URBAN_BIRD_SPECIES.map(s => s.id),
-]);
-const MAMMAL_IDS = new Set(["cat", "dog"]);
+const PREFERRED_QUIET_IDS = new Set(["pigeon", "cat", "owl"]);
 
-type Habitat = "forest" | "urban" | "mixed" | "quiet";
+type Habitat = "resonant" | "domestic" | "unstable" | "quiet";
 
 function pickRandomSpecies(pool: Species[]): Species {
-  return pool[Math.floor(Math.random() * pool.length)] || ALL_SPECIES[0] || SPECIES[0];
+  return pool[Math.floor(Math.random() * pool.length)] || SPECIES[0];
 }
 
 function getAverageFeatures(samples: AudioFeatures[]): AudioFeatures | null {
@@ -51,9 +41,9 @@ function rangeScore(val: number, min: number, max: number): number {
 
 function inferHabitat(features: AudioFeatures | null): Habitat {
   if (!features || features.rms < 0.004) return "quiet";
-  if (features.rms > 0.2 || features.flatness > 0.52) return "urban";
-  if (features.spectralCentroid > 1800 && features.lowEnergyRatio < 0.5) return "forest";
-  return "mixed";
+  if (features.rms > 0.2 || features.flatness > 0.52) return "unstable";
+  if (features.spectralCentroid > 1800 && features.lowEnergyRatio < 0.5) return "resonant";
+  return "domestic";
 }
 
 function speciesScore(species: Species, features: AudioFeatures): number {
@@ -73,66 +63,52 @@ function speciesScore(species: Species, features: AudioFeatures): number {
   let normalized = score / weight;
   const habitat = inferHabitat(features);
 
-  // Depuis une fenêtre en ville, on privilégie les oiseaux aigus et bavards
-  // plutôt que de retomber mécaniquement sur le pigeon.
-  if ((habitat === "urban" || habitat === "mixed") && ["ring_necked_parakeet", "house_sparrow", "magpie"].includes(species.id)) normalized += 0.1;
-  if ((habitat === "forest" || habitat === "mixed") && ["blackbird", "robin", "great_tit", "blue_tit", "chaffinch", "wren", "nightingale"].includes(species.id)) normalized += 0.1;
+  if (habitat === "quiet" && PREFERRED_QUIET_IDS.has(species.id)) normalized += 0.08;
+  if (habitat === "domestic" && species.id === "pigeon") normalized += 0.1;
+  if (habitat === "resonant" && ["crow", "cat", "owl"].includes(species.id)) normalized += 0.08;
+  if (habitat === "unstable" && ["duck", "dog"].includes(species.id)) normalized += 0.12;
 
-  const highFast = features.spectralCentroid > 2600 && features.zcr > 0.06 && features.lowEnergyRatio < 0.45;
-  const melodic = features.periodicity > 0.22 && features.spectralCentroid > 1700 && features.lowEnergyRatio < 0.42;
-  const pigeonLike = features.dominantFreq < 950 && features.spectralCentroid < 1900 && features.lowEnergyRatio > 0.45 && features.periodicity > 0.22;
-
-  if (species.id === "ring_necked_parakeet" && highFast && features.flatness > 0.12) normalized += 0.16;
-  if (species.id === "nightingale" && melodic && features.flatness < 0.4) normalized += 0.14;
-  if (["great_tit", "blue_tit", "house_sparrow", "chaffinch", "robin"].includes(species.id) && highFast) normalized += 0.09;
-  if (species.id === "magpie" && features.flatness > 0.16 && features.zcr > 0.06) normalized += 0.1;
-
-  if (PIGEON_IDS.has(species.id) && !pigeonLike) normalized -= 0.22;
-  if (species.id === "crow" && features.spectralCentroid > 2400) normalized -= 0.12;
+  if (species.id === "dog" && features.rms < 0.025) normalized -= 0.12;
+  if (species.id === "owl" && features.spectralCentroid > 1600) normalized -= 0.08;
 
   return Math.max(0, Math.min(1, normalized));
 }
 
 function classifyLocalSpecies(features: AudioFeatures): { species: Species; score: number }[] {
-  return ALL_SPECIES
-    .filter(species => BIRD_IDS.has(species.id) || MAMMAL_IDS.has(species.id))
+  return SPECIES
     .map(species => ({ species, score: speciesScore(species, features) }))
     .sort((a, b) => b.score - a.score);
 }
 
-function getBirdNetLiteSpecies(features: AudioFeatures | null): Species {
-  const birds = ALL_SPECIES.filter((species) => BIRD_IDS.has(species.id));
-  if (!features || features.rms < 0.004) return pickRandomSpecies(birds.filter(s => !PIGEON_IDS.has(s.id)));
-
+function getTraceSpecies(features: AudioFeatures | null): Species {
+  if (!features || features.rms < 0.004) return pickRandomSpecies(SPECIES.filter(s => PREFERRED_QUIET_IDS.has(s.id)));
   const scores = classifyLocalSpecies(features);
-  const bestBird = scores.find((entry) => BIRD_IDS.has(entry.species.id));
-  const bestMammal = scores.find((entry) => MAMMAL_IDS.has(entry.species.id));
-
-  let birdLikelihood = 0;
-  if (features.dominantFreq >= 650) birdLikelihood += 1;
-  if (features.spectralCentroid >= 1000) birdLikelihood += 1;
-  if (features.lowEnergyRatio <= 0.68) birdLikelihood += 1;
-  if (features.zcr >= 0.035) birdLikelihood += 1;
-  if (features.rms <= 0.28) birdLikelihood += 1;
-  if (features.flatness >= 0.04 && features.flatness <= 0.62) birdLikelihood += 1;
-
-  let mammalLikelihood = 0;
-  if (features.rms >= 0.16) mammalLikelihood += 1;
-  if (features.dominantFreq <= 650 && features.lowEnergyRatio >= 0.55) mammalLikelihood += 1;
-  if (bestMammal && bestMammal.score >= 0.68) mammalLikelihood += 2;
-
-  if (bestBird && (birdLikelihood >= 2 || bestBird.score >= 0.32) && mammalLikelihood < 3) return bestBird.species;
-
-  return pickRandomSpecies(birds.filter(s => !PIGEON_IDS.has(s.id)));
+  return scores[0]?.species || pickRandomSpecies(SPECIES);
 }
 
 function getHabitatScan(features: AudioFeatures | null, lang: Lang): string {
   const habitat = inferHabitat(features);
   const labels = {
-    forest: { fr: "AMBIANCE : FORÊT / LISIÈRE — PASSEREAUX POSSIBLES", en: "AMBIENCE: FOREST / EDGE — PASSERINES POSSIBLE", es: "AMBIENTE: BOSQUE / BORDE — PASERIFORMES POSIBLES" },
-    urban: { fr: "AMBIANCE : FENÊTRE URBAINE — SIGNAUX MIXTES", en: "AMBIENCE: URBAN WINDOW — MIXED SIGNALS", es: "AMBIENTE: VENTANA URBANA — SEÑALES MIXTAS" },
-    mixed: { fr: "AMBIANCE : LISIÈRE URBAINE — TRAFIC AVIAIRE", en: "AMBIENCE: URBAN EDGE — BIRD TRAFFIC", es: "AMBIENTE: BORDE URBANO — TRÁFICO AVIAR" },
-    quiet: { fr: "AMBIANCE : ÉCOUTE EN COURS", en: "AMBIENCE: LISTENING", es: "AMBIENTE: ESCUCHANDO" },
+    resonant: {
+      fr: "AMBIANCE : ZONE RÉSONANTE — RÉMANENCES POSSIBLES",
+      en: "AMBIENCE: RESONANT ZONE — REMANENCES POSSIBLE",
+      es: "AMBIENTE: ZONA RESONANTE — REMANENCIAS POSIBLES",
+    },
+    domestic: {
+      fr: "AMBIANCE : INTÉRIEUR / TRACE DOMESTIQUE — SIGNAUX MIXTES",
+      en: "AMBIENCE: INTERIOR / DOMESTIC TRACE — MIXED SIGNALS",
+      es: "AMBIENTE: INTERIOR / TRAZA DOMÉSTICA — SEÑALES MIXTAS",
+    },
+    unstable: {
+      fr: "AMBIANCE : PARASITES / STRUCTURE INSTABLE — PRUDENCE MARTY",
+      en: "AMBIENCE: INTERFERENCE / UNSTABLE STRUCTURE — MARTY CAUTION",
+      es: "AMBIENTE: INTERFERENCIAS / ESTRUCTURA INESTABLE — CAUTELA MARTY",
+    },
+    quiet: {
+      fr: "AMBIANCE : ÉCOUTE DE TRACE EN COURS",
+      en: "AMBIENCE: TRACE LISTENING",
+      es: "AMBIENTE: ESCUCHA DE TRAZA",
+    },
   } as const;
   return labels[habitat][lang];
 }
@@ -246,14 +222,14 @@ export function useAudioAnalysis() {
   }, [lang]);
 
   const publishLiveReading = useCallback((features: AudioFeatures | null, progress: number) => {
-    const species = getBirdNetLiteSpecies(features);
+    const species = getTraceSpecies(features);
     const confidence = Math.floor(Math.min(88, Math.max(34, progress * 0.75 + Math.random() * 16)));
     setDetectedLabel(species.scientificName[lang] || species.name);
     setState(s => ({ ...s, ...buildReading(species, features, false, confidence), isListening: true, isAnalyzing: false, scanProgress: Math.max(s.scanProgress, progress) }));
   }, [buildReading, lang]);
 
   const finalizeReading = useCallback((finalFeatures: AudioFeatures | null) => {
-    const species = getBirdNetLiteSpecies(finalFeatures);
+    const species = getTraceSpecies(finalFeatures);
     const topScore = finalFeatures ? (classifyLocalSpecies(finalFeatures)[0]?.score ?? 0.6) : 0.55;
     const confidence = Math.floor(Math.min(88, Math.max(48, topScore * 82 + Math.random() * 8)));
     setDetectedLabel(null);
