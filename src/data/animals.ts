@@ -1,5 +1,5 @@
 import type { Lang, AnalysisState, AudioFeatures } from "./translations";
-import { ANIMAL_TEXTS } from "./animalTexts";
+import { SPECTRAL_TEXTS } from "./spectralTexts";
 import {
   UI_LABELS as BASE_UI_LABELS,
   getThreatColor,
@@ -131,11 +131,7 @@ export const ANIMALS: Animal[] = [
   {
     id: "crow",
     name: "REMANENTIA CORVUS",
-    scientificName: {
-      en: "Cognitive Trace",
-      fr: "Trace cognitive",
-      es: "Traza cognitiva",
-    },
+    scientificName: { en: "Cognitive Trace", fr: "Trace cognitive", es: "Traza cognitiva" },
     emoji: "📡",
     acousticProfile: {
       dominantFreqMin: 800,
@@ -158,11 +154,7 @@ export const ANIMALS: Animal[] = [
   {
     id: "pigeon",
     name: "ECHO DOMESTICA",
-    scientificName: {
-      en: "Domestic Remanence",
-      fr: "Rémanence domestique",
-      es: "Remanencia doméstica",
-    },
+    scientificName: { en: "Domestic Remanence", fr: "Rémanence domestique", es: "Remanencia doméstica" },
     emoji: "🏚️",
     acousticProfile: {
       dominantFreqMin: 200,
@@ -185,11 +177,7 @@ export const ANIMALS: Animal[] = [
   {
     id: "duck",
     name: "PARASITUS MINOR",
-    scientificName: {
-      en: "Minor Parasite Signal",
-      fr: "Parasite spectral mineur",
-      es: "Parásito espectral menor",
-    },
+    scientificName: { en: "Minor Parasite Signal", fr: "Parasite spectral mineur", es: "Parásito espectral menor" },
     emoji: "〰️",
     acousticProfile: {
       dominantFreqMin: 300,
@@ -212,11 +200,7 @@ export const ANIMALS: Animal[] = [
   {
     id: "cat",
     name: "PRESENCIA POLITA",
-    scientificName: {
-      en: "Polite Presence",
-      fr: "Présence polie",
-      es: "Presencia educada",
-    },
+    scientificName: { en: "Polite Presence", fr: "Présence polie", es: "Presencia educada" },
     emoji: "👻",
     acousticProfile: {
       dominantFreqMin: 500,
@@ -239,11 +223,7 @@ export const ANIMALS: Animal[] = [
   {
     id: "dog",
     name: "STRUCTURA INSTABILIS",
-    scientificName: {
-      en: "Unstable Structure",
-      fr: "Structure instable",
-      es: "Estructura inestable",
-    },
+    scientificName: { en: "Unstable Structure", fr: "Structure instable", es: "Estructura inestable" },
     emoji: "🦴",
     acousticProfile: {
       dominantFreqMin: 200,
@@ -266,11 +246,7 @@ export const ANIMALS: Animal[] = [
   {
     id: "owl",
     name: "ARCHIVUM NOCTURNA",
-    scientificName: {
-      en: "Nocturnal Archive",
-      fr: "Archive nocturne",
-      es: "Archivo nocturno",
-    },
+    scientificName: { en: "Nocturnal Archive", fr: "Archive nocturne", es: "Archivo nocturno" },
     emoji: "🌘",
     acousticProfile: {
       dominantFreqMin: 150,
@@ -294,7 +270,7 @@ export const ANIMALS: Animal[] = [
 
 export const SPECIES = ANIMALS.map((animal) => ({
   ...animal,
-  ...ANIMAL_TEXTS[animal.id],
+  ...SPECTRAL_TEXTS[animal.id],
 }));
 
 export type Species = (typeof SPECIES)[number];
