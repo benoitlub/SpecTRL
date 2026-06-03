@@ -3,7 +3,6 @@ import { SPECTRAL_TEXTS } from "./spectralTexts";
 import {
   UI_LABELS as BASE_UI_LABELS,
   getThreatColor,
-  getCrypticMessages,
   getRandomTranslation,
   extractAudioFeatures,
   classifySpecies,
@@ -12,12 +11,48 @@ import {
 
 export {
   getThreatColor,
-  getCrypticMessages,
   getRandomTranslation,
   extractAudioFeatures,
   classifySpecies,
   getWeightedSpecies,
 };
+
+const CRYPTIC_MESSAGES: Record<Lang, string[]> = {
+  en: [
+    "TRACE POSSIBLE — DO NOT CONFIRM",
+    "SLS HYPOTHESIS — UNSTABLE FORM",
+    "MARTY CHANNEL — LOW COHERENCE",
+    "ROOM SIGNAL — PARTIAL INTERPRETATION",
+    "RESIDUAL NETWORK — NON BIOLOGICAL",
+    "FORM ANOMALY — LISTENING",
+    "STATIC REMANENCE — HOLDING",
+    "THE CORNER IS ANSWERING AGAIN",
+  ],
+  fr: [
+    "TRACE POSSIBLE — NE PAS CONFIRMER",
+    "HYPOTHÈSE SLS — FORME INSTABLE",
+    "CANAL MARTY — COHÉRENCE FAIBLE",
+    "SIGNAL DE PIÈCE — INTERPRÉTATION PARTIELLE",
+    "RÉSEAU RÉMANENT — NON BIOLOGIQUE",
+    "ANOMALIE DE FORME — ÉCOUTE EN COURS",
+    "RÉMANENCE STATIQUE — MAINTIEN DU CANAL",
+    "LE COIN RÉPOND ENCORE",
+  ],
+  es: [
+    "TRAZA POSIBLE — NO CONFIRMAR",
+    "HIPÓTESIS SLS — FORMA INESTABLE",
+    "CANAL MARTY — BAJA COHERENCIA",
+    "SEÑAL DE HABITACIÓN — INTERPRETACIÓN PARCIAL",
+    "RED REMANENTE — NO BIOLÓGICA",
+    "ANOMALÍA DE FORMA — ESCUCHANDO",
+    "REMANENCIA ESTÁTICA — CANAL ESTABLE",
+    "LA ESQUINA RESPONDE OTRA VEZ",
+  ],
+};
+
+export function getCrypticMessages(lang: Lang): string[] {
+  return CRYPTIC_MESSAGES[lang] || CRYPTIC_MESSAGES.fr;
+}
 
 export const UI_LABELS: typeof BASE_UI_LABELS = {
   ...BASE_UI_LABELS,
