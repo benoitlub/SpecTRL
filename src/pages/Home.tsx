@@ -4,6 +4,7 @@ import { ParticleField } from "../components/ParticleField";
 import { MicButton } from "../components/MicButton";
 import { TranslationCard } from "../components/TranslationCard";
 import { IntroOverlay } from "../components/IntroOverlay";
+import { SensorScreens } from "../components/SensorScreens";
 import { UI_LABELS, type Lang } from "../data/animals";
 import {
   SpeciesPanel,
@@ -39,7 +40,7 @@ function GlitchOverlay({ active }: { active: boolean }) {
   if (!active) return null;
   return (
     <div className="pointer-events-none fixed inset-0" style={{ zIndex: 50, background: "rgba(155, 89, 255, 0.04)", mixBlendMode: "screen" }}>
-      <div className="absolute" style={{ top: `${20 + Math.random() * 60}%`, left: 0, right: 0, height: "2px", background: "rgba(255, 140, 0, 0.42)", transform: `translateX(${(Math.random() - 0.5) * 20}px)` }} />
+      <div className="absolute" style={{ top: `${20 + Math.random() * 60}%`, left: 0, right: 0, height: "2px", background: "rgba(155, 89, 255, 0.42)", transform: `translateX(${(Math.random() - 0.5) * 20}px)` }} />
       <div className="absolute" style={{ top: `${30 + Math.random() * 40}%`, left: 0, right: 0, height: "1px", background: "rgba(0, 212, 255, 0.35)", transform: `translateX(${(Math.random() - 0.5) * 30}px)` }} />
     </div>
   );
@@ -68,7 +69,7 @@ function FeuchEmblem() {
       <svg viewBox="0 0 64 64" className="w-8 h-8" fill="none" stroke="#b78cff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: "drop-shadow(0 0 7px #9b59ff99)" }}>
         <path d="M8 36h9l5-16 8 30 8-38 7 24h11" />
         <path d="M20 49c8-5 16-5 24 0" stroke="#00d4ff" strokeWidth="2" opacity="0.85" />
-        <circle cx="32" cy="30" r="5" stroke="#ff8c00" strokeWidth="2" opacity="0.75" />
+        <circle cx="32" cy="30" r="5" stroke="#00ff88" strokeWidth="2" opacity="0.75" />
       </svg>
     </div>
   );
@@ -143,7 +144,7 @@ function LedBar({ value, pending = false }: { value: number; pending?: boolean }
   return (
     <div className="flex gap-0.5 w-20 justify-end" aria-label={`${value}%`}>
       {Array.from({ length: 10 }, (_, i) => (
-        <span key={i} className="h-2 w-1.5 rounded-sm transition-all duration-200" style={{ background: i < lit ? (i > 7 ? "#ff8c00" : "#9b59ff") : "rgba(255,255,255,0.08)", boxShadow: i < lit ? `0 0 5px ${i > 7 ? "#ff8c00" : "#9b59ff"}` : "none", opacity: pending ? 0.22 : i < lit ? 0.95 : 0.35 }} />
+        <span key={i} className="h-2 w-1.5 rounded-sm transition-all duration-200" style={{ background: i < lit ? (i > 7 ? "#00ff88" : "#9b59ff") : "rgba(255,255,255,0.08)", boxShadow: i < lit ? `0 0 5px ${i > 7 ? "#00ff88" : "#9b59ff"}` : "none", opacity: pending ? 0.22 : i < lit ? 0.95 : 0.35 }} />
       ))}
     </div>
   );
@@ -226,7 +227,7 @@ function LiveSignalDashboard({ active, audioFeatures, detectedLabel, progress }:
       </div>
       <div className="space-y-1">
         {signatureRows.map(row => {
-          const diode = row.tone === "primary" ? "#00ff88" : row.tone === "secondary" ? "#9b59ff" : row.tone === "warning" ? "#ff8c00" : "#ffffff33";
+          const diode = row.tone === "primary" ? "#00ff88" : row.tone === "secondary" ? "#9b59ff" : row.tone === "warning" ? "#00d4ff" : "#ffffff33";
           return (
             <div key={row.label} className="grid grid-cols-[10px_1fr_auto_34px] items-center gap-2 text-[9px] font-mono tracking-wider">
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: diode, boxShadow: row.pending ? "none" : `0 0 5px ${diode}` }} />
@@ -254,7 +255,7 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-hidden flex flex-col" style={{ background: "radial-gradient(ellipse at 15% 18%, rgba(155,89,255,0.24) 0%, transparent 45%), radial-gradient(ellipse at 85% 78%, rgba(0,212,255,0.16) 0%, transparent 52%), radial-gradient(ellipse at 50% 110%, rgba(255,140,0,0.08) 0%, transparent 48%), #01040c", fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace" }}>
+    <div className="relative min-h-screen w-full overflow-x-hidden flex flex-col" style={{ background: "radial-gradient(ellipse at 15% 18%, rgba(155,89,255,0.24) 0%, transparent 45%), radial-gradient(ellipse at 85% 78%, rgba(0,212,255,0.16) 0%, transparent 52%), radial-gradient(ellipse at 50% 110%, rgba(0,255,136,0.055) 0%, transparent 48%), #01040c", fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace" }}>
       {introOpen && <IntroOverlay onEnter={enterProtocol} />}
       <ParticleField active={state.isListening || state.isAnalyzing} />
       <ScannerLines />
@@ -265,6 +266,7 @@ export default function Home() {
           <SpeciesPanel state={state} lang={lang} />
           <EmotionalPanel state={state} lang={lang} />
         </div>
+        <SensorScreens active={state.isListening || state.isAnalyzing} audioFeatures={activeAudioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
         <LiveSignalDashboard active={state.isListening || state.isAnalyzing} audioFeatures={activeAudioFeatures} detectedLabel={detectedLabel || state.detectedSpecies} progress={state.scanProgress} />
         <div className="flex justify-center"><CrypticTicker message={crypticMessage} /></div>
         <TranslationCard state={state} lang={lang} />
