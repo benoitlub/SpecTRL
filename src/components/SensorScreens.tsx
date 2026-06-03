@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { AudioFeatures } from "../data/animals";
 
 type SensorScreensProps = {
@@ -27,7 +27,7 @@ function MiniHeader({ label, status, accent = CYAN }: { label: string; status: s
         <span className="w-1.5 h-1.5 rounded-full" style={{ background: accent, boxShadow: `0 0 6px ${accent}` }} />
         <span className="text-[9px] font-mono tracking-[0.28em] uppercase truncate" style={{ color: accent }}>{label}</span>
       </div>
-      <span className="text-[8px] font-mono tracking-[0.18em] uppercase" style={{ color: status === "LIVE" ? GREEN : "#ffffff3d" }}>{status}</span>
+      <span className="text-[8px] font-mono tracking-[0.18em] uppercase" style={{ color: status === "LIVE" || status === "CAM" || status === "TRACK" ? GREEN : "#ffffff3d" }}>{status}</span>
     </div>
   );
 }
@@ -98,20 +98,99 @@ function StickFigure({ index, active, stability }: { index: number; active: bool
   );
 }
 
+function useSlsCamera() {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "denied">("idle");
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setStatus("idle");
+  };
+
+  const startCamera = async () => {
+    if (streamRef.current || status === "loading") return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setStatus("denied");
+      return;
+    }
+
+    setStatus("loading");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 640 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play().catch(() => undefined);
+      }
+      setStatus("ready");
+    } catch {
+      setStatus("denied");
+    }
+  };
+
+  useEffect(() => stopCamera, []);
+
+  return { videoRef, status, startCamera, stopCamera };
+}
+
 function SlsScreen({ active, features, progress }: { active: boolean; features: AudioFeatures | null; progress: number }) {
+  const { videoRef, status, startCamera, stopCamera } = useSlsCamera();
   const formLock = clamp(progress * 0.62 + metric(features?.periodicity, 0.2) * 32 + metric(features?.rms, 0) * 120, 4, 96);
   const stability = clamp(100 - metric(features?.flatness, 0.2) * 110 + progress * 0.08, 8, 92);
   const hasExtra = active && formLock > 48;
+  const showMain = active || progress > 20 || status === "ready";
 
   return (
-    <div className="relative h-36 rounded border border-purple-400/15 bg-purple-400/[0.025] overflow-hidden">
-      <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "linear-gradient(rgba(155,89,255,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.10) 1px, transparent 1px)", backgroundSize: "18px 18px" }} />
-      <div className="absolute left-2 top-2 text-[8px] font-mono tracking-[0.22em] text-purple-300/60 uppercase">SLS FORM LAYER</div>
-      <svg viewBox="0 0 100 86" className="absolute inset-0 w-full h-full" style={{ filter: active ? "drop-shadow(0 0 8px rgba(155,89,255,0.45))" : "none" }}>
-        <StickFigure index={0} active={active || progress > 20} stability={formLock} />
+    <div className="relative aspect-square rounded border border-purple-400/15 bg-purple-400/[0.025] overflow-hidden">
+      <video
+        ref={videoRef}
+        muted
+        playsInline
+        autoPlay
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ opacity: status === "ready" ? 0.46 : 0, filter: "grayscale(1) contrast(1.35) brightness(0.72) hue-rotate(205deg)" }}
+      />
+      <div className="absolute inset-0" style={{ background: status === "ready" ? "linear-gradient(180deg, rgba(1,4,12,0.20), rgba(1,4,12,0.52))" : "radial-gradient(circle at 50% 40%, rgba(155,89,255,0.16), transparent 42%)" }} />
+      <div className="absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(rgba(155,89,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.12) 1px, transparent 1px)", backgroundSize: "18px 18px" }} />
+      <div className="absolute inset-0 opacity-25" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.36) 3px, rgba(0,0,0,0.36) 5px)" }} />
+      <div className="absolute left-2 top-2 text-[8px] font-mono tracking-[0.22em] text-purple-300/70 uppercase">SLS CAMERA LAYER</div>
+
+      {status !== "ready" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-3 text-center">
+          <button
+            onClick={startCamera}
+            className="rounded border px-3 py-2 text-[9px] font-mono uppercase tracking-[0.18em]"
+            style={{ borderColor: "#9b59ff55", color: "#cbb7ff", background: "rgba(155,89,255,0.10)", boxShadow: "0 0 14px #9b59ff22" }}
+          >
+            {status === "loading" ? "Ouverture caméra..." : "Activer caméra SLS"}
+          </button>
+          {status === "denied" && <div className="text-[8px] font-mono text-cyan-300/60 uppercase tracking-[0.12em]">Caméra refusée / indisponible</div>}
+          <div className="text-[8px] font-mono text-slate-500 uppercase tracking-[0.12em]">Overlay disponible sans IA de pose</div>
+        </div>
+      )}
+
+      {status === "ready" && (
+        <button
+          onClick={stopCamera}
+          className="absolute right-2 top-2 rounded border px-2 py-1 text-[7px] font-mono uppercase tracking-[0.16em]"
+          style={{ borderColor: "#00d4ff33", color: "#9eefff", background: "rgba(0,0,0,0.35)" }}
+        >
+          cam off
+        </button>
+      )}
+
+      <svg viewBox="0 0 100 86" className="absolute inset-0 w-full h-full" style={{ filter: showMain ? "drop-shadow(0 0 8px rgba(155,89,255,0.45))" : "none", opacity: status === "ready" || showMain ? 1 : 0.28 }}>
+        <StickFigure index={0} active={showMain} stability={formLock} />
         {hasExtra && <StickFigure index={1} active={active} stability={stability * 0.7} />}
         {formLock > 70 && <StickFigure index={2} active={active} stability={stability * 0.52} />}
       </svg>
+
       <div className="absolute bottom-2 left-2 right-2 grid grid-cols-2 gap-2">
         <MetricRow label="FORM" value={`${Math.round(formLock)}%`} color={VIOLET} />
         <MetricRow label="JOINT" value={stability > 55 ? "PARTIAL" : "UNSTABLE"} color={stability > 55 ? GREEN : CYAN} />
