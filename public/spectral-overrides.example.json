@@ -1,0 +1,27 @@
+{
+  "version": "0.2.1",
+  "source": "notion-safe-export-example",
+  "mode": "local-fallback-first",
+  "items": [
+    {
+      "key": "pigeon",
+      "signature": "Rémanence domestique",
+      "lang": "fr",
+      "type": "translation",
+      "text": "La soupe refroidit encore. Ça devient un problème logistique.",
+      "enabled": true,
+      "order": 1,
+      "weight": 1
+    },
+    {
+      "key": "dog",
+      "signature": "Structure instable",
+      "lang": "fr",
+      "type": "translation",
+      "text": "La caméra pense que j'ai des coudes. Nous sommes tous très émus.",
+      "enabled": true,
+      "order": 1,
+      "weight": 1
+    }
+  ]
+}
