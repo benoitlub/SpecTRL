@@ -37,31 +37,42 @@ function SpectrumBars({ features, active, progress }: { features: AudioFeatures 
     const rms = metric(features?.rms, 0) * 180;
     const centroid = metric(features?.spectralCentroid, 900) / 95;
     const flat = metric(features?.flatness, 0.14) * 70;
-    const seed = active ? Date.now() / 290 : 12;
+    const seed = active ? Date.now() / 260 : 12;
 
     return Array.from({ length: 24 }, (_, i) => {
       const wave = Math.sin(seed + i * 0.72) * 18;
       const comb = Math.cos(seed * 0.7 + i * 0.33) * 11;
-      const base = active ? progress * 0.28 + rms + centroid + flat : 8;
-      return clamp(base + wave + comb + (i % 5) * 3, 4, 96);
+      const base = active ? progress * 0.28 + rms + centroid + flat : 14;
+      return clamp(base + wave + comb + (i % 5) * 3, 7, 96);
     });
   }, [features, active, progress]);
 
   return (
-    <div className="h-20 rounded border border-cyan-400/15 bg-cyan-400/[0.025] px-2 py-2 overflow-hidden">
-      <div className="flex h-full items-end gap-1">
-        {bars.map((h, i) => (
-          <span
-            key={i}
-            className="flex-1 rounded-t-sm transition-all duration-150"
-            style={{
-              height: `${h}%`,
-              background: i % 4 === 0 ? `linear-gradient(180deg, ${GREEN}, ${CYAN}55)` : `linear-gradient(180deg, ${CYAN}, ${VIOLET}55)`,
-              opacity: active ? 0.72 : 0.28,
-              boxShadow: active && i % 6 === 0 ? `0 0 8px ${CYAN}66` : "none",
-            }}
-          />
-        ))}
+    <div className="relative h-20 rounded border border-cyan-400/15 bg-cyan-400/[0.025] px-2 py-2 overflow-hidden">
+      <div className="absolute inset-0 opacity-40" style={{ background: "radial-gradient(circle at 22% 85%, rgba(0,212,255,0.18), transparent 28%), radial-gradient(circle at 78% 18%, rgba(155,89,255,0.15), transparent 30%)" }} />
+      <div className="absolute inset-0 opacity-25" style={{ backgroundImage: "linear-gradient(rgba(0,212,255,0.10) 1px, transparent 1px)", backgroundSize: "100% 13px" }} />
+      <div className="relative flex h-full items-end gap-1">
+        {bars.map((h, i) => {
+          const color = i % 5 === 0 ? GREEN : i % 3 === 0 ? VIOLET : CYAN;
+          const base = i % 5 === 0 ? CYAN : VIOLET;
+          return (
+            <span
+              key={i}
+              className="relative flex-1 rounded-t-sm transition-all duration-150"
+              style={{
+                height: `${h}%`,
+                background: `linear-gradient(180deg, ${color}, ${base}88 55%, rgba(5,10,26,0.35))`,
+                opacity: active ? 0.78 : 0.38,
+                boxShadow: active
+                  ? `0 0 8px ${color}88, 0 0 18px ${color}30, inset 0 0 8px rgba(255,255,255,0.12)`
+                  : `0 0 8px ${color}22`,
+                filter: active ? "saturate(1.18)" : "saturate(0.72)",
+              }}
+            >
+              <span className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full" style={{ background: color, opacity: active ? 0.32 : 0.12, filter: "blur(4px)" }} />
+            </span>
+          );
+        })}
       </div>
     </div>
   );
@@ -72,6 +83,60 @@ function MetricRow({ label, value, color = CYAN }: { label: string; value: strin
     <div className="flex items-center justify-between gap-2 text-[8px] font-mono tracking-[0.14em] uppercase">
       <span className="text-slate-500">{label}</span>
       <span style={{ color }}>{value}</span>
+    </div>
+  );
+}
+
+function buildWavePath(seed: number, amp: number, yBase: number, phase = 0) {
+  const points = Array.from({ length: 52 }, (_, i) => {
+    const x = (i / 51) * 100;
+    const pulse = Math.sin(i * 0.52 + seed + phase) * amp;
+    const drift = Math.sin(i * 0.17 + seed * 0.6 + phase) * amp * 0.45;
+    const spike = Math.sin(i * 1.25 + seed * 1.4 + phase) * amp * 0.18;
+    const y = yBase + pulse + drift + spike;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  return `M ${points.join(" L ")}`;
+}
+
+function GhostRadioWaves({ active, air, low, progress }: { active: boolean; air: number; low: number; progress: number }) {
+  const seed = active ? Date.now() / 440 : 3;
+  const intensity = clamp((air + low + progress) / 3, 8, 92);
+  const waves = [
+    { y: 50, amp: 4 + intensity * 0.08, color: CYAN, opacity: 0.58, phase: 0 },
+    { y: 42, amp: 3 + low * 0.06, color: VIOLET, opacity: 0.42, phase: 1.7 },
+    { y: 59, amp: 2.5 + air * 0.05, color: GREEN, opacity: 0.34, phase: 3.2 },
+  ];
+
+  return (
+    <div className="relative mt-3 h-20 rounded border border-green-400/10 bg-green-400/[0.018] overflow-hidden">
+      <div className="absolute inset-0 opacity-35" style={{ backgroundImage: "linear-gradient(rgba(0,255,136,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.08) 1px, transparent 1px)", backgroundSize: "18px 18px" }} />
+      <div className="absolute inset-0" style={{ background: "radial-gradient(circle at 50% 50%, rgba(155,89,255,0.12), transparent 48%)" }} />
+      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
+        {waves.map((wave, index) => (
+          <path
+            key={index}
+            d={buildWavePath(seed, wave.amp, wave.y, wave.phase)}
+            fill="none"
+            stroke={wave.color}
+            strokeWidth={index === 0 ? 1.6 : 1.05}
+            strokeLinecap="round"
+            opacity={active ? wave.opacity : wave.opacity * 0.42}
+            style={{ filter: `drop-shadow(0 0 5px ${wave.color})` }}
+          />
+        ))}
+        <path
+          d={`M 0,${50 - intensity * 0.15} C 18,${24 + intensity * 0.1} 31,${74 - intensity * 0.12} 47,50 S 72,${26 + intensity * 0.11} 100,${54 - intensity * 0.08}`}
+          fill="none"
+          stroke={VIOLET}
+          strokeWidth="0.75"
+          strokeDasharray="2 5"
+          opacity={active ? 0.42 : 0.16}
+          style={{ filter: `drop-shadow(0 0 6px ${VIOLET})` }}
+        />
+      </svg>
+      <div className="absolute left-2 top-2 text-[8px] font-mono uppercase tracking-[0.18em] text-green-300/45">ghost radio / subcarrier</div>
+      <div className="absolute bottom-2 right-2 text-[8px] font-mono uppercase tracking-[0.18em] text-cyan-300/50">{active ? "modulation" : "silence"}</div>
     </div>
   );
 }
@@ -228,9 +293,7 @@ export function SensorScreens({ active, audioFeatures, progress, detectedLabel }
           <MetricRow label="AIR" value={`${Math.round(air)}%`} color={CYAN} />
           <MetricRow label="COURANT" value={active ? "SUSPECT" : "CALME"} color={active ? VIOLET : GREEN} />
         </div>
-        <div className="mt-3 h-12 rounded border border-green-400/10 bg-green-400/[0.025] flex items-center justify-center overflow-hidden">
-          <div className="w-full h-px" style={{ background: `linear-gradient(90deg, transparent, ${GREEN}66, ${CYAN}55, ${VIOLET}55, transparent)`, boxShadow: `0 0 12px ${GREEN}33`, transform: `translateY(${active ? Math.sin(Date.now() / 500) * 8 : 0}px)` }} />
-        </div>
+        <GhostRadioWaves active={active} air={air} low={low} progress={progress} />
       </div>
 
       <div className="rounded border p-3 backdrop-blur-sm" style={{ borderColor: "#9b59ff30", background: "rgba(2,8,20,0.72)", boxShadow: "inset 0 0 18px #9b59ff08" }}>
