@@ -3,7 +3,7 @@ import { useAudioAnalysis } from "../hooks/useAudioAnalysis";
 import { ParticleField } from "../components/ParticleField";
 import { MicButton } from "../components/MicButton";
 import { TranslationCard } from "../components/TranslationCard";
-import { UI_LABELS, type Lang } from "../data/translations";
+import { UI_LABELS, type Lang } from "../data/animals";
 import {
   SpeciesPanel,
   EmotionalPanel,
@@ -149,7 +149,7 @@ type SignatureRow = {
 
 function inferHabitat(audioFeatures: any, active: boolean) {
   if (!active && !audioFeatures) return "---";
-  return (audioFeatures?.spectralCentroid ?? 0) > 1800 && (audioFeatures?.lowEnergyRatio ?? 0.3) < 0.5 ? "FORÊT" : "MIXTE";
+  return (audioFeatures?.spectralCentroid ?? 0) > 1800 && (audioFeatures?.lowEnergyRatio ?? 0.3) < 0.5 ? "ZONE RÉSONANTE" : "MIXTE";
 }
 
 function getSignalPercent(audioFeatures: any, progress: number) {
@@ -170,11 +170,11 @@ function isPigeonLike(audioFeatures: any) {
 
 function getSecondarySignatureLabel(audioFeatures: any, habitat: string, detectedLabel: string | null, gossip: number, signal: number) {
   const label = (detectedLabel || "").toLowerCase();
-  const primaryIsPigeon = label.includes("pigeon") || label.includes("columba");
+  const primaryIsDomestic = label.includes("domestic") || label.includes("rémanence") || label.includes("echo");
 
-  if (primaryIsPigeon || isPigeonLike(audioFeatures)) return "ROUCOULEMENT POSSIBLE";
-  if (audioFeatures?.spectralCentroid > 2800 && audioFeatures?.zcr > 0.08 && audioFeatures?.flatness > 0.12) return "PSITTACIDÉ POSSIBLE";
-  if (habitat === "FORÊT") return "PASSEREAU POSSIBLE";
+  if (primaryIsDomestic || isPigeonLike(audioFeatures)) return "RÉMANENCE DOMESTIQUE";
+  if (audioFeatures?.spectralCentroid > 2800 && audioFeatures?.zcr > 0.08 && audioFeatures?.flatness > 0.12) return "PARASITE SPECTRAL";
+  if (habitat === "ZONE RÉSONANTE") return "TRACE INSTABLE";
   if (gossip > 62 && signal > 10) return "SIGNAL BAVARD";
   return "ÉCHO SECONDAIRE";
 }
@@ -192,7 +192,7 @@ function LiveSignalDashboard({ active, audioFeatures, detectedLabel, progress }:
 
     const rows: SignatureRow[] = [];
     const primaryValue = Math.min(96, Math.max(8, Math.round(detectedLabel ? Math.max(progress, signal) : Math.max(progress, signal * 1.4))));
-    rows.push({ label: detectedLabel || (progress > 24 ? "SIGNATURE AVIAIRE" : "ACQUISITION DU SIGNAL"), value: primaryValue, tone: "primary" });
+    rows.push({ label: detectedLabel || (progress > 24 ? "SIGNATURE DE TRACE" : "ACQUISITION DU SIGNAL"), value: primaryValue, tone: "primary" });
 
     const secondaryValue = Math.min(82, Math.max(0, Math.round(gossip * 0.62 + signal * 0.18)));
     if (progress > 22 || secondaryValue > 28) {
@@ -204,7 +204,7 @@ function LiveSignalDashboard({ active, audioFeatures, detectedLabel, progress }:
     }
 
     const lowBandValue = Math.min(76, Math.max(0, Math.round(lowEnergy * 0.78)));
-    if (lowEnergy > 62 && signal > 10) rows.push({ label: "BASSE FRÉQ. / CANIDÉ", value: lowBandValue, tone: "warning" });
+    if (lowEnergy > 62 && signal > 10) rows.push({ label: "BASSE FRÉQ. / RÉSIDU", value: lowBandValue, tone: "warning" });
 
     return rows.slice(0, 3);
   }, [hasSignal, detectedLabel, progress, signal, gossip, lowEnergy, habitat, audioFeatures]);
