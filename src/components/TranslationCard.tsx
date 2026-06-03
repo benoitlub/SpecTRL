@@ -3,28 +3,28 @@ import { type AnalysisState, UI_LABELS, type Lang } from "../data/animals";
 
 const ANALYSIS_STEPS: Record<Lang, string[]> = {
   fr: [
-    "Capture du signal bioacoustique",
+    "Capture de la trace acoustique",
     "Nettoyage du bruit humain inutile",
-    "Isolement des individus suspects",
-    "Comparaison BirdNET Lite",
-    "Interprétation comportementale",
-    "Traduction approximative interdite aux humains",
+    "Isolement des rémanences suspectes",
+    "Comparaison des signatures Marty",
+    "Interprétation environnementale",
+    "Traduction expérimentale non contractuelle",
   ],
   en: [
-    "Capturing bioacoustic signal",
+    "Capturing acoustic trace",
     "Removing unnecessary human noise",
-    "Isolating suspicious individuals",
-    "Comparing BirdNET Lite patterns",
-    "Reading behavioral intent",
-    "Rendering forbidden human translation",
+    "Isolating suspicious remanences",
+    "Comparing Marty signature patterns",
+    "Reading environmental intent",
+    "Rendering experimental non-binding translation",
   ],
   es: [
-    "Captura de señal bioacústica",
+    "Captura de traza acústica",
     "Limpieza del ruido humano innecesario",
-    "Aislamiento de individuos sospechosos",
-    "Comparación BirdNET Lite",
-    "Interpretación del comportamiento",
-    "Traducción aproximada prohibida a humanos",
+    "Aislamiento de remanencias sospechosas",
+    "Comparación de firmas Marty",
+    "Interpretación ambiental",
+    "Traducción experimental no contractual",
   ],
 };
 
@@ -48,7 +48,6 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
       return;
     }
 
-    // En live, le texte doit apparaître tout de suite. En final, on garde l'effet machine à écrire.
     if (state.isListening) {
       setDisplayed(state.translation);
       return;
@@ -86,7 +85,7 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
   }, []);
 
   const accentColor = state.isPoetic ? "#9b59ff" : isLive ? "#00ff88" : "#00d4ff";
-  const labelText = isLive ? "TRADUCTION LIVE // CANAL OUVERT" : state.isPoetic ? t.poetry : t.translation;
+  const labelText = isLive ? "TRADUCTION LIVE // CANAL MARTY OUVERT" : state.isPoetic ? t.poetry : t.translation;
   const borderActive = isFinal || isLive;
 
   return (
@@ -124,7 +123,7 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
             boxShadow: borderActive ? `0 0 4px ${accentColor}` : state.isAnalyzing || state.isListening ? "0 0 4px #ff8c00" : "none",
           }}
         />
-        {state.isAnalyzing && !hasTranslation ? "BIOACOUSTIC REFLECTION" : labelText}
+        {state.isAnalyzing && !hasTranslation ? "TRACE RESONANCE REFLECTION" : labelText}
         {isLive && <span className="ml-auto text-[8px] tracking-wider text-green-400/70">LIVE</span>}
         {state.isPoetic && isFinal && (
           <span className="ml-auto text-[8px] tracking-wider text-purple-400/70">{t.rare}</span>
@@ -182,7 +181,7 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
         >
           {!displayed && (
             <span className="text-cyan-400/50 tracking-[0.22em] uppercase text-[10px]">
-              ⚠ Transmission interceptée...
+              ⚠ Remanence interceptée...
             </span>
           )}
           {state.isPoetic && displayed && <span className="text-purple-400/60 mr-1">&ldquo;</span>}
@@ -206,7 +205,7 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
           )}
           <span className="text-[8px] font-mono text-gray-600 tracking-wider">{t.confidence}: {state.confidence}%</span>
           <span className="text-[8px] font-mono text-gray-600 tracking-wider ml-auto">
-            {isLive ? "STREAMING" : t.institute + " // BLACKLACE-7"}
+            {isLive ? "STREAMING" : t.institute + " // SPEC-TRL"}
           </span>
         </div>
       )}
