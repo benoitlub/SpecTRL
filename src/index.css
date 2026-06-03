@@ -73,6 +73,12 @@
   }
 }
 
+@layer utilities {
+  .spectrl-sensor-compact {
+    grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 0.82fr) !important;
+  }
+}
+
 @keyframes fadeInOut {
   0% { opacity: 0; transform: translateY(-4px); }
   15% { opacity: 1; transform: translateY(0); }
