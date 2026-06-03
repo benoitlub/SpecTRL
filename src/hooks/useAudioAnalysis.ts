@@ -11,6 +11,7 @@ import {
 } from "../data/animals";
 
 const PREFERRED_QUIET_IDS = new Set(["pigeon", "cat", "owl"]);
+const LIVE_READING_INTERVAL_FRAMES = 42;
 
 type Habitat = "resonant" | "domestic" | "unstable" | "quiet";
 
@@ -194,7 +195,7 @@ export function useAudioAnalysis() {
     const msgs = getCrypticMessages(lang);
     const idx = Math.floor(Math.random() * msgs.length);
     setCrypticMessage(msgs[idx]);
-    crypticTimerRef.current = setTimeout(rotateCrypticMessage, 4000 + Math.random() * 6000);
+    crypticTimerRef.current = setTimeout(rotateCrypticMessage, 6500 + Math.random() * 7000);
   }, [lang]);
 
   const buildReading = useCallback((species: Species, features: AudioFeatures | null, complete: boolean, confidence?: number) => {
@@ -285,7 +286,7 @@ export function useAudioAnalysis() {
         const progress = Math.min(96, accumulatedFeaturesRef.current.length * 2 + Math.random() * 2);
         const avg = getAverageFeatures(accumulatedFeaturesRef.current) || feats;
         setState(s => ({ ...s, scanProgress: Math.max(s.scanProgress, progress), audioFeatures: avg }));
-        if (frames % 10 === 0 && accumulatedFeaturesRef.current.length > 2) publishLiveReading(avg, progress);
+        if (frames % LIVE_READING_INTERVAL_FRAMES === 0 && accumulatedFeaturesRef.current.length > 2) publishLiveReading(avg, progress);
       }, 100);
     }
   }, [animateWaveform, rotateCrypticMessage, triggerGlitch, publishLiveReading]);
