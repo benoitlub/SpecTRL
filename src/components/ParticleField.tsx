@@ -11,7 +11,7 @@ type Particle = {
   color: string;
 };
 
-const COLORS = ["#ff8c00", "#00d4ff", "#00ff88", "#ff8c0044", "#00d4ff44"];
+const COLORS = ["#9b59ff", "#00d4ff", "#00ff88", "#9b59ff44", "#00d4ff44", "#00ff8833"];
 
 export function ParticleField({ active }: { active: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -81,7 +81,7 @@ export function ParticleField({ active }: { active: boolean }) {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ opacity: 0.5 }}
+      style={{ opacity: 0.42 }}
     />
   );
 }
