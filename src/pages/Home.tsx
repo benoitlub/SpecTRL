@@ -4,7 +4,7 @@ import { ParticleField } from "../components/ParticleField";
 import { MicButton } from "../components/MicButton";
 import { TranslationCard } from "../components/TranslationCard";
 import { IntroOverlay } from "../components/IntroOverlay";
-import { SensorScreens } from "../components/SensorScreens";
+import { SensorScreensV3 } from "../components/SensorScreensV3";
 import { UI_LABELS, type Lang } from "../data/animals";
 import {
   SpeciesPanel,
@@ -266,7 +266,7 @@ export default function Home() {
           <SpeciesPanel state={state} lang={lang} />
           <EmotionalPanel state={state} lang={lang} />
         </div>
-        <SensorScreens active={state.isListening || state.isAnalyzing} audioFeatures={activeAudioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
+        <SensorScreensV3 active={state.isListening || state.isAnalyzing} audioFeatures={activeAudioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
         <LiveSignalDashboard active={state.isListening || state.isAnalyzing} audioFeatures={activeAudioFeatures} detectedLabel={detectedLabel || state.detectedSpecies} progress={state.scanProgress} />
         <div className="flex justify-center"><CrypticTicker message={crypticMessage} /></div>
         <TranslationCard state={state} lang={lang} />
