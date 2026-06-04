@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAudioAnalysis } from "../hooks/useAudioAnalysis";
+import { useSpectralBeeps } from "../hooks/useSpectralBeeps";
 import { ParticleField } from "../components/ParticleField";
 import { MicButton } from "../components/MicButton";
 import { TranslationCard } from "../components/TranslationCard";
@@ -18,20 +19,8 @@ import {
 function ScannerLines() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ zIndex: 1 }}>
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 5px)",
-          backgroundSize: "100% 5px",
-        }}
-      />
-      <div
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage: "linear-gradient(rgba(0,212,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(155,89,255,0.035) 1px, transparent 1px)",
-          backgroundSize: "44px 44px",
-        }}
-      />
+      <div className="absolute inset-0" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 5px)", backgroundSize: "100% 5px" }} />
+      <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "linear-gradient(rgba(0,212,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(155,89,255,0.035) 1px, transparent 1px)", backgroundSize: "44px 44px" }} />
     </div>
   );
 }
@@ -57,15 +46,7 @@ function CrypticTicker({ message }: { message: string }) {
 
 function FeuchEmblem() {
   return (
-    <div
-      className="hidden xs:flex w-12 h-12 shrink-0 items-center justify-center rounded-xl border"
-      style={{
-        borderColor: "#9b59ff66",
-        background: "radial-gradient(circle at 50% 50%, rgba(155,89,255,0.16), rgba(2,8,20,0.3))",
-        boxShadow: "0 0 20px #9b59ff24, inset 0 0 16px #00d4ff14",
-        clipPath: "polygon(18% 0, 82% 0, 100% 30%, 100% 70%, 82% 100%, 18% 100%, 0 70%, 0 30%)",
-      }}
-    >
+    <div className="hidden xs:flex w-12 h-12 shrink-0 items-center justify-center rounded-xl border" style={{ borderColor: "#9b59ff66", background: "radial-gradient(circle at 50% 50%, rgba(155,89,255,0.16), rgba(2,8,20,0.3))", boxShadow: "0 0 20px #9b59ff24, inset 0 0 16px #00d4ff14", clipPath: "polygon(18% 0, 82% 0, 100% 30%, 100% 70%, 82% 100%, 18% 100%, 0 70%, 0 30%)" }}>
       <svg viewBox="0 0 64 64" className="w-8 h-8" fill="none" stroke="#b78cff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ filter: "drop-shadow(0 0 7px #9b59ff99)" }}>
         <path d="M8 36h9l5-16 8 30 8-38 7 24h11" />
         <path d="M20 49c8-5 16-5 24 0" stroke="#00d4ff" strokeWidth="2" opacity="0.85" />
@@ -76,11 +57,7 @@ function FeuchEmblem() {
 }
 
 function LangSelector({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
-  const opts: { v: Lang; l: string }[] = [
-    { v: "fr", l: "FR" },
-    { v: "en", l: "EN" },
-    { v: "es", l: "ES" },
-  ];
+  const opts: { v: Lang; l: string }[] = [{ v: "fr", l: "FR" }, { v: "en", l: "EN" }, { v: "es", l: "ES" }];
   return (
     <div className="flex items-center gap-1.5">
       <span className="text-[8px] font-mono text-gray-500 tracking-widest">{UI_LABELS[lang].lang}</span>
@@ -104,25 +81,14 @@ function Header({ glitch, lang, onLangChange }: { glitch: boolean; lang: Lang; o
 
   return (
     <header className="relative px-3 pt-3 pb-2" style={{ zIndex: 3 }}>
-      <div
-        className="relative overflow-hidden rounded-b-xl border px-3 py-3"
-        style={{
-          borderColor: "#9b59ff40",
-          background: "linear-gradient(180deg, rgba(7,5,22,0.98), rgba(0,12,30,0.84))",
-          boxShadow: "0 0 26px rgba(155,89,255,0.13), inset 0 0 24px rgba(0,212,255,0.04)",
-        }}
-      >
+      <div className="relative overflow-hidden rounded-b-xl border px-3 py-3" style={{ borderColor: "#9b59ff40", background: "linear-gradient(180deg, rgba(7,5,22,0.98), rgba(0,12,30,0.84))", boxShadow: "0 0 26px rgba(155,89,255,0.13), inset 0 0 24px rgba(0,212,255,0.04)" }}>
         <div className="absolute top-0 left-5 right-5 h-px" style={{ background: "linear-gradient(90deg, transparent, #9b59ffaa, transparent)" }} />
         <div className="absolute -right-10 -top-10 w-32 h-32 rounded-full" style={{ background: "radial-gradient(circle, rgba(155,89,255,0.10), transparent 60%)" }} />
         <div className="flex items-center gap-3">
           <FeuchEmblem />
           <div className="min-w-0 flex-1">
-            <div className="text-xl sm:text-2xl font-mono font-bold tracking-[0.22em] uppercase leading-none truncate" style={{ color: "#d6c0ff", textShadow: "0 0 16px #9b59ff99", filter: glitch ? "blur(0.5px)" : "none" }}>
-              {t.title}
-            </div>
-            <div className="text-[8px] sm:text-[9px] font-mono tracking-[0.34em] text-cyan-300/65 uppercase mt-1 truncate">
-              {t.subtitle}
-            </div>
+            <div className="text-xl sm:text-2xl font-mono font-bold tracking-[0.22em] uppercase leading-none truncate" style={{ color: "#d6c0ff", textShadow: "0 0 16px #9b59ff99", filter: glitch ? "blur(0.5px)" : "none" }}>{t.title}</div>
+            <div className="text-[8px] sm:text-[9px] font-mono tracking-[0.34em] text-cyan-300/65 uppercase mt-1 truncate">{t.subtitle}</div>
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between gap-2 text-[9px] font-mono text-gray-500 tracking-wider flex-wrap">
@@ -150,12 +116,7 @@ function LedBar({ value, pending = false }: { value: number; pending?: boolean }
   );
 }
 
-type SignatureRow = {
-  label: string;
-  value: number;
-  tone: "primary" | "secondary" | "warning" | "idle";
-  pending?: boolean;
-};
+type SignatureRow = { label: string; value: number; tone: "primary" | "secondary" | "warning" | "idle"; pending?: boolean };
 
 function inferHabitat(audioFeatures: any, active: boolean) {
   if (!active && !audioFeatures) return "---";
@@ -169,19 +130,12 @@ function getSignalPercent(audioFeatures: any, progress: number) {
 
 function isPigeonLike(audioFeatures: any) {
   if (!audioFeatures) return false;
-  return (
-    audioFeatures.dominantFreq < 950 &&
-    audioFeatures.spectralCentroid < 1900 &&
-    audioFeatures.lowEnergyRatio > 0.45 &&
-    audioFeatures.periodicity > 0.22 &&
-    audioFeatures.zcr < 0.12
-  );
+  return audioFeatures.dominantFreq < 950 && audioFeatures.spectralCentroid < 1900 && audioFeatures.lowEnergyRatio > 0.45 && audioFeatures.periodicity > 0.22 && audioFeatures.zcr < 0.12;
 }
 
 function getSecondarySignatureLabel(audioFeatures: any, habitat: string, detectedLabel: string | null, gossip: number, signal: number) {
   const label = (detectedLabel || "").toLowerCase();
   const primaryIsDomestic = label.includes("domestic") || label.includes("rémanence") || label.includes("echo");
-
   if (primaryIsDomestic || isPigeonLike(audioFeatures)) return "RÉMANENCE DOMESTIQUE";
   if (audioFeatures?.spectralCentroid > 2800 && audioFeatures?.zcr > 0.08 && audioFeatures?.flatness > 0.12) return "PARASITE SPECTRAL";
   if (habitat === "ZONE RÉSONANTE") return "TRACE INSTABLE";
@@ -199,23 +153,13 @@ function LiveSignalDashboard({ active, audioFeatures, detectedLabel, progress }:
 
   const signatureRows = useMemo<SignatureRow[]>(() => {
     if (!hasSignal) return [{ label: "EMPLACEMENT SIGNATURE", value: 0, tone: "idle", pending: true }];
-
     const rows: SignatureRow[] = [];
     const primaryValue = Math.min(96, Math.max(8, Math.round(detectedLabel ? Math.max(progress, signal) : Math.max(progress, signal * 1.4))));
     rows.push({ label: detectedLabel || (progress > 24 ? "SIGNATURE DE TRACE" : "ACQUISITION DU SIGNAL"), value: primaryValue, tone: "primary" });
-
     const secondaryValue = Math.min(82, Math.max(0, Math.round(gossip * 0.62 + signal * 0.18)));
-    if (progress > 22 || secondaryValue > 28) {
-      rows.push({
-        label: getSecondarySignatureLabel(audioFeatures, habitat, detectedLabel, gossip, signal),
-        value: Math.max(18, secondaryValue),
-        tone: "secondary",
-      });
-    }
-
+    if (progress > 22 || secondaryValue > 28) rows.push({ label: getSecondarySignatureLabel(audioFeatures, habitat, detectedLabel, gossip, signal), value: Math.max(18, secondaryValue), tone: "secondary" });
     const lowBandValue = Math.min(76, Math.max(0, Math.round(lowEnergy * 0.78)));
     if (lowEnergy > 62 && signal > 10) rows.push({ label: "BASSE FRÉQ. / RÉSIDU", value: lowBandValue, tone: "warning" });
-
     return rows.slice(0, 3);
   }, [hasSignal, detectedLabel, progress, signal, gossip, lowEnergy, habitat, audioFeatures]);
 
@@ -248,6 +192,7 @@ export default function Home() {
   const activeAudioFeatures = audioFeatures || state.audioFeatures;
   const micSignal = state.isComplete ? state.signalQuality : getSignalPercent(activeAudioFeatures, state.scanProgress);
   const micHabitat = state.environmentalScan ? state.environmentalScan.split("—")[0].replace("AMBIANCE :", "").trim() : inferHabitat(activeAudioFeatures, state.isListening || state.isAnalyzing);
+  useSpectralBeeps(state.isListening || state.isAnalyzing, state.scanProgress, state.isComplete);
 
   const enterProtocol = () => {
     window.localStorage.setItem("spectrl-intro-seen", "yes");
