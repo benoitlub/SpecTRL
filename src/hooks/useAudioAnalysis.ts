@@ -9,9 +9,11 @@ import {
   type AudioFeatures,
   type Species,
 } from "../data/animals";
+import { getSpectralHumorLine } from "../data/spectralHumor";
 
 const PREFERRED_QUIET_IDS = new Set(["pigeon", "cat", "owl"]);
-const LIVE_READING_INTERVAL_FRAMES = 42;
+const LIVE_READING_INTERVAL_FRAMES = 32;
+const MIN_TRACE_RMS = 0.0025;
 
 type Habitat = "resonant" | "domestic" | "unstable" | "quiet";
 
@@ -199,7 +201,9 @@ export function useAudioAnalysis() {
   }, [lang]);
 
   const buildReading = useCallback((species: Species, features: AudioFeatures | null, complete: boolean, confidence?: number) => {
-    const { text, isPoetic } = getRandomTranslation(species, lang);
+    const base = getRandomTranslation(species, lang);
+    const useDomesticTyrant = complete && Math.random() < 0.72;
+    const text = useDomesticTyrant ? getSpectralHumorLine(lang) : base.text;
     const emotionalIdx = Math.floor(Math.random() * species.emotionalStates[lang].length);
     const threatIdx = Math.floor(Math.random() * species.threatLevels.length);
     const intentIdx = Math.floor(Math.random() * species.biologicalIntents[lang].length);
@@ -214,7 +218,7 @@ export function useAudioAnalysis() {
       signalQuality: Math.floor(55 + Math.random() * 40),
       translation: text,
       environmentalScan: getHabitatScan(features, lang),
-      isPoetic,
+      isPoetic: useDomesticTyrant ? false : base.isPoetic,
       isComplete: complete,
       detectedSpecies: species.scientificName[lang] || species.name,
       speciesConfidence: conf,
@@ -279,14 +283,20 @@ export function useAudioAnalysis() {
         const feats = extractAudioFeatures(analyser, ctx);
         setAudioFeatures(feats);
         frames++;
-        if (feats.rms > 0.006) {
+
+        if (feats.rms > MIN_TRACE_RMS || frames % 8 === 0) {
           accumulatedFeaturesRef.current.push(feats);
           if (accumulatedFeaturesRef.current.length > 180) accumulatedFeaturesRef.current = accumulatedFeaturesRef.current.slice(-180);
         }
-        const progress = Math.min(96, accumulatedFeaturesRef.current.length * 2 + Math.random() * 2);
+
+        const signalBoost = Math.min(28, feats.rms * 520);
+        const progress = Math.min(96, frames * 0.55 + accumulatedFeaturesRef.current.length * 1.1 + signalBoost + Math.random() * 1.5);
         const avg = getAverageFeatures(accumulatedFeaturesRef.current) || feats;
         setState(s => ({ ...s, scanProgress: Math.max(s.scanProgress, progress), audioFeatures: avg }));
-        if (frames % LIVE_READING_INTERVAL_FRAMES === 0 && accumulatedFeaturesRef.current.length > 2) publishLiveReading(avg, progress);
+
+        if (frames % LIVE_READING_INTERVAL_FRAMES === 0 && (accumulatedFeaturesRef.current.length > 0 || progress > 18)) {
+          publishLiveReading(avg, progress);
+        }
       }, 100);
     }
   }, [animateWaveform, rotateCrypticMessage, triggerGlitch, publishLiveReading]);
