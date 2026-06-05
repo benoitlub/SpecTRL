@@ -10,7 +10,8 @@ import {
 
 const APP_URL = "https://benoitlub.github.io/SpecTRL/";
 const LAB_LINE = "Aucune entité n’a été rémunérée pendant cette manifestation. Marty Labs accepte les dons en piles, en silence ou en Wi-Fi stable.";
-const SHARE_CTA = `Scanne toi aussi les tyrans du courant d’air :\n${APP_URL}`;
+const SHARE_CTA_TEXT = "Scanne toi aussi les tyrans du courant d’air :";
+const SHARE_CTA = `${SHARE_CTA_TEXT}\n${APP_URL}`;
 
 function formatDate(value: string) {
   try {
@@ -29,7 +30,7 @@ function Metric({ label, value, suffix = "" }: { label: string; value?: number; 
   );
 }
 
-function buildShareText(entry: SpectralJournalEntry) {
+function buildShareText(entry: SpectralJournalEntry, includeUrl = true) {
   const place = entry.locationNote || entry.habitat || "rémanence non localisée";
   return [
     "SpecTRL a intercepté :",
@@ -40,7 +41,7 @@ function buildShareText(entry: SpectralJournalEntry) {
     "",
     LAB_LINE,
     "",
-    SHARE_CTA,
+    includeUrl ? SHARE_CTA : SHARE_CTA_TEXT,
   ].join("\n");
 }
 
@@ -78,19 +79,20 @@ export function SpectralJournal({ latestEntry }: { latestEntry: SpectralJournalE
 
   const shareSelected = async () => {
     if (!selected) return;
-    const text = buildShareText(selected);
+    const fullText = buildShareText(selected, true);
+    const nativeText = buildShareText(selected, false);
     setShareStatus("");
     try {
       if (navigator.share) {
-        await navigator.share({ title: `SpecTRL — ${selected.signatureName}`, text, url: APP_URL });
+        await navigator.share({ title: `SpecTRL — ${selected.signatureName}`, text: nativeText, url: APP_URL });
         setShareStatus("Trace partagée. Marty nie toute mise en scène.");
         return;
       }
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(fullText);
       setShareStatus("Trace copiée avec le lien SpecTRL.");
     } catch {
       try {
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(fullText);
         setShareStatus("Partage annulé, mais trace copiée avec le lien SpecTRL.");
       } catch {
         setShareStatus("Partage impossible ici. Le tiroir conserve une influence considérable.");
