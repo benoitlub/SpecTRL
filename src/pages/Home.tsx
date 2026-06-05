@@ -190,31 +190,52 @@ export default function Home() {
   const { state, crypticMessage, audioFeatures, detectedLabel, lang, setLang, startListening, stopListening, reset } = useAudioAnalysis();
   const [introOpen, setIntroOpen] = useState(() => window.localStorage.getItem("spectrl-intro-seen") !== "yes");
   const activeAudioFeatures = audioFeatures || state.audioFeatures;
+  const scanActive = state.isListening || state.isAnalyzing;
+  const activeDetectedLabel = detectedLabel || state.detectedSpecies;
   const micSignal = state.isComplete ? state.signalQuality : getSignalPercent(activeAudioFeatures, state.scanProgress);
-  const micHabitat = state.environmentalScan ? state.environmentalScan.split("—")[0].replace("AMBIANCE :", "").trim() : inferHabitat(activeAudioFeatures, state.isListening || state.isAnalyzing);
-  useSpectralBeeps(state.isListening || state.isAnalyzing, state.scanProgress, state.isComplete);
+  const micHabitat = state.environmentalScan ? state.environmentalScan.split("—")[0].replace("AMBIANCE :", "").trim() : inferHabitat(activeAudioFeatures, scanActive);
+  useSpectralBeeps(scanActive, state.scanProgress, state.isComplete);
 
   const enterProtocol = () => {
     window.localStorage.setItem("spectrl-intro-seen", "yes");
     setIntroOpen(false);
   };
 
+  const signaturePanel = <LiveSignalDashboard active={scanActive} audioFeatures={activeAudioFeatures} detectedLabel={activeDetectedLabel} progress={state.scanProgress} />;
+  const translationPanel = <TranslationCard state={state} lang={lang} />;
+  const sensorPanel = <SensorScreensV3 active={scanActive} audioFeatures={activeAudioFeatures} progress={state.scanProgress} detectedLabel={activeDetectedLabel} />;
+  const identityPanels = (
+    <div className="grid grid-cols-2 gap-2">
+      <SpeciesPanel state={state} lang={lang} />
+      <EmotionalPanel state={state} lang={lang} />
+    </div>
+  );
+
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden flex flex-col" style={{ background: "radial-gradient(ellipse at 15% 18%, rgba(155,89,255,0.24) 0%, transparent 45%), radial-gradient(ellipse at 85% 78%, rgba(0,212,255,0.16) 0%, transparent 52%), radial-gradient(ellipse at 50% 110%, rgba(0,255,136,0.055) 0%, transparent 48%), #01040c", fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace" }}>
       {introOpen && <IntroOverlay onEnter={enterProtocol} />}
-      <ParticleField active={state.isListening || state.isAnalyzing} />
+      <ParticleField active={scanActive} />
       <ScannerLines />
       <GlitchOverlay active={state.glitchActive} />
       <Header glitch={state.glitchActive} lang={lang} onLangChange={setLang} />
       <main className="relative flex-1 flex flex-col gap-2 p-3 sm:p-4 max-w-4xl mx-auto w-full" style={{ zIndex: 2, paddingBottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}>
-        <div className="grid grid-cols-2 gap-2">
-          <SpeciesPanel state={state} lang={lang} />
-          <EmotionalPanel state={state} lang={lang} />
-        </div>
-        <SensorScreensV3 active={state.isListening || state.isAnalyzing} audioFeatures={activeAudioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
-        <LiveSignalDashboard active={state.isListening || state.isAnalyzing} audioFeatures={activeAudioFeatures} detectedLabel={detectedLabel || state.detectedSpecies} progress={state.scanProgress} />
-        <div className="flex justify-center"><CrypticTicker message={crypticMessage} /></div>
-        <TranslationCard state={state} lang={lang} />
+        {scanActive ? (
+          <>
+            {signaturePanel}
+            {translationPanel}
+            <div className="flex justify-center"><CrypticTicker message={crypticMessage} /></div>
+            {sensorPanel}
+            {identityPanels}
+          </>
+        ) : (
+          <>
+            {identityPanels}
+            {sensorPanel}
+            {signaturePanel}
+            <div className="flex justify-center"><CrypticTicker message={crypticMessage} /></div>
+            {translationPanel}
+          </>
+        )}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <ThreatPanel state={state} lang={lang} />
           <BiologicalPanel state={state} lang={lang} />
