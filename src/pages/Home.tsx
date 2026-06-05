@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAudioAnalysis } from "../hooks/useAudioAnalysis";
 import { useSpectralBeeps } from "../hooks/useSpectralBeeps";
 import { ParticleField } from "../components/ParticleField";
@@ -6,7 +6,9 @@ import { MicButton } from "../components/MicButton";
 import { TranslationCard } from "../components/TranslationCard";
 import { IntroOverlay } from "../components/IntroOverlay";
 import { SensorScreensV3 } from "../components/SensorScreensV3";
+import { SpectralJournal } from "../components/SpectralJournal";
 import { UI_LABELS, type Lang } from "../data/animals";
+import { createSpectralJournalEntry, saveSpectralJournalEntry, type SpectralJournalEntry } from "../utils/spectralJournal";
 import {
   SpeciesPanel,
   EmotionalPanel,
@@ -73,12 +75,10 @@ function LangSelector({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => v
 function Header({ glitch, lang, onLangChange }: { glitch: boolean; lang: Lang; onLangChange: (l: Lang) => void }) {
   const [blink, setBlink] = useState(true);
   const t = UI_LABELS[lang];
-
   useEffect(() => {
     const id = setInterval(() => setBlink(b => !b), 800);
     return () => clearInterval(id);
   }, []);
-
   return (
     <header className="relative px-3 pt-3 pb-2" style={{ zIndex: 3 }}>
       <div className="relative overflow-hidden rounded-b-xl border px-3 py-3" style={{ borderColor: "#9b59ff40", background: "linear-gradient(180deg, rgba(7,5,22,0.98), rgba(0,12,30,0.84))", boxShadow: "0 0 26px rgba(155,89,255,0.13), inset 0 0 24px rgba(0,212,255,0.04)" }}>
@@ -150,7 +150,6 @@ function LiveSignalDashboard({ active, audioFeatures, detectedLabel, progress }:
   const lowEnergy = Math.min(99, Math.max(0, Math.round((audioFeatures?.lowEnergyRatio ?? 0) * 95)));
   const habitat = inferHabitat(audioFeatures, active);
   const hasSignal = active || progress > 1 || Boolean(detectedLabel);
-
   const signatureRows = useMemo<SignatureRow[]>(() => {
     if (!hasSignal) return [{ label: "EMPLACEMENT SIGNATURE", value: 0, tone: "idle", pending: true }];
     const rows: SignatureRow[] = [];
@@ -162,7 +161,6 @@ function LiveSignalDashboard({ active, audioFeatures, detectedLabel, progress }:
     if (lowEnergy > 62 && signal > 10) rows.push({ label: "BASSE FRÉQ. / RÉSIDU", value: lowBandValue, tone: "warning" });
     return rows.slice(0, 3);
   }, [hasSignal, detectedLabel, progress, signal, gossip, lowEnergy, habitat, audioFeatures]);
-
   return (
     <div className="rounded border px-3 py-2 backdrop-blur-sm" style={{ borderColor: active ? "#9b59ff55" : "#ffffff11", background: "rgba(5,5,22,0.70)" }}>
       <div className="flex items-center justify-between mb-1.5">
@@ -189,12 +187,25 @@ function LiveSignalDashboard({ active, audioFeatures, detectedLabel, progress }:
 export default function Home() {
   const { state, crypticMessage, audioFeatures, detectedLabel, lang, setLang, startListening, stopListening, reset } = useAudioAnalysis();
   const [introOpen, setIntroOpen] = useState(() => window.localStorage.getItem("spectrl-intro-seen") !== "yes");
+  const [latestSpectralEntry, setLatestSpectralEntry] = useState<SpectralJournalEntry | null>(null);
+  const lastSavedKeyRef = useRef("");
   const activeAudioFeatures = audioFeatures || state.audioFeatures;
   const scanActive = state.isListening || state.isAnalyzing;
   const activeDetectedLabel = detectedLabel || state.detectedSpecies;
   const micSignal = state.isComplete ? state.signalQuality : getSignalPercent(activeAudioFeatures, state.scanProgress);
   const micHabitat = state.environmentalScan ? state.environmentalScan.split("—")[0].replace("AMBIANCE :", "").trim() : inferHabitat(activeAudioFeatures, scanActive);
   useSpectralBeeps(scanActive, state.scanProgress, state.isComplete);
+
+  useEffect(() => {
+    if (!state.isComplete || !state.translation) return;
+    const saveKey = `${state.translation}-${state.detectedSpecies || "trace"}`;
+    if (lastSavedKeyRef.current === saveKey) return;
+    const entry = createSpectralJournalEntry(state, activeAudioFeatures);
+    if (!entry) return;
+    saveSpectralJournalEntry(entry);
+    setLatestSpectralEntry(entry);
+    lastSavedKeyRef.current = saveKey;
+  }, [state.isComplete, state.translation, state.detectedSpecies, activeAudioFeatures, state]);
 
   const enterProtocol = () => {
     window.localStorage.setItem("spectrl-intro-seen", "yes");
@@ -204,6 +215,7 @@ export default function Home() {
   const signaturePanel = <LiveSignalDashboard active={scanActive} audioFeatures={activeAudioFeatures} detectedLabel={activeDetectedLabel} progress={state.scanProgress} />;
   const translationPanel = <TranslationCard state={state} lang={lang} />;
   const sensorPanel = <SensorScreensV3 active={scanActive} audioFeatures={activeAudioFeatures} progress={state.scanProgress} detectedLabel={activeDetectedLabel} />;
+  const journalPanel = <SpectralJournal latestEntry={latestSpectralEntry} />;
   const identityPanels = (
     <div className="grid grid-cols-2 gap-2">
       <SpeciesPanel state={state} lang={lang} />
@@ -234,6 +246,7 @@ export default function Home() {
             {signaturePanel}
             <div className="flex justify-center"><CrypticTicker message={crypticMessage} /></div>
             {translationPanel}
+            {journalPanel}
           </>
         )}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
