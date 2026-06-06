@@ -1,23 +1,10 @@
 import type { Lang } from "./translations";
 
-const STORE_KEY = "spectrl-evolution-count-v1";
+const KEY = "spectrl-evolution-count-v1";
 
-type PhaseId = "indifferent" | "curious" | "petty" | "domestic_tyrant" | "attention_war" | "lucid_crack";
-
-type Phase = {
-  id: PhaseId;
-  min: number;
-  max: number;
-  weight: number;
-  lines: Record<Lang, string[]>;
-};
-
-const PHASES: Phase[] = [
-  {
-    id: "indifferent",
-    min: 0,
-    max: 4,
-    weight: 1,
-    lines: {
-      fr: [
-        "Je
+const LINES: Record<Lang, string[]> = {
+  fr: [
+    "Rideau. Tiroir. Fenêtre. Quelque chose insiste, mais mollement.",
+    "Quelqu'un a senti le courant d'air. C'était peut-être moi. Ou la fenêtre.",
+    "Je ne suis pas un bruit dans le mur. Je suis une présence. Un bruit très investi.",
+    "J'ai
