@@ -8,4 +8,7 @@ import { IntroOverlay } from "../components/IntroOverlay";
 import { SensorScreensV3 } from "../components/SensorScreensV3";
 import { SpectralJournal } from "../components/SpectralJournal";
 import { UI_LABELS, type Lang } from "../data/animals";
-import { createSpectralJournalEntry, saveSpectralJournalEntry, type SpectralJournalEntry } from "
+import { createSpectralJournalEntry, saveSpectralJournalEntry, type SpectralJournalEntry } from "../utils/spectralJournal";
+import { SpeciesPanel, EmotionalPanel, ThreatPanel, BiologicalPanel, NeuralPanel, EnvironmentPanel } from "../components/AnalysisPanels";
+
+function getSignalPercent(audio
