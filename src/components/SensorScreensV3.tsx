@@ -312,7 +312,7 @@ function SlsCamera({ active, features, progress, sensors }: { active: boolean; f
             {status === "loading" ? "Ouverture caméra..." : "Activer vision"}
           </button>
           {status === "denied" && <div className="text-[8px] font-mono uppercase tracking-[0.10em]" style={{ color: CYAN }}>caméra refusée / indisponible</div>}
-          <div className="text-[7px] font-mono uppercase tracking-[0.12em] text-slate-500">silhouette interprétative basse consommation</div>
+          <div className="text-[7px] font-mono uppercase tracking-[0.12em] text-slate-500">module expérimental isolé</div>
         </div>
       )}
 
@@ -350,28 +350,46 @@ function RealSensorGrid({ sensors, features, active }: { sensors: PhoneSensors; 
 
 export function SensorScreensV3({ active, audioFeatures, progress, detectedLabel }: SensorScreensV3Props) {
   const sensors = usePhoneSensors(active);
+  const [visionOpen, setVisionOpen] = useState(false);
   const centroid = n(audioFeatures?.spectralCentroid, 0);
   const envMode = active || progress > 10 ? (centroid > 1800 ? "RÉSONANT" : "MIXTE") : "VEILLE";
 
   return (
-    <section className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-      <Panel>
-        <MiniHeader label="RADAR SPECTRAL" status={active ? "LIVE" : "IDLE"} />
-        <SpectralRadar active={active} features={audioFeatures} progress={progress} sensors={sensors} />
-      </Panel>
+    <>
+      <section className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <Panel>
+          <MiniHeader label="RADAR SPECTRAL" status={active ? "LIVE" : "IDLE"} />
+          <SpectralRadar active={active} features={audioFeatures} progress={progress} sensors={sensors} />
+        </Panel>
 
-      <Panel>
-        <MiniHeader label="CAPTEURS TÉLÉPHONE" status={envMode} />
-        <RealSensorGrid sensors={sensors} features={audioFeatures} active={active} />
-        <div className="mt-2 text-[7px] font-mono uppercase tracking-[0.14em]" style={{ color: DIM }}>
-          {detectedLabel ? `trace: ${detectedLabel}` : "trace: acquisition faible / attente"}
+        <Panel>
+          <MiniHeader label="CAPTEURS TÉLÉPHONE" status={envMode} />
+          <RealSensorGrid sensors={sensors} features={audioFeatures} active={active} />
+          <div className="mt-2 flex items-center justify-between gap-2 text-[7px] font-mono uppercase tracking-[0.14em]" style={{ color: DIM }}>
+            <span className="truncate">{detectedLabel ? `trace: ${detectedLabel}` : "trace: acquisition faible / attente"}</span>
+            <button type="button" onClick={() => setVisionOpen(true)} className="shrink-0 rounded border px-2 py-1 tracking-[0.16em]" style={{ borderColor: "rgba(155,89,255,0.36)", color: GHOST, background: "rgba(155,89,255,0.08)" }}>
+              vision SLS
+            </button>
+          </div>
+        </Panel>
+      </section>
+
+      {visionOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/72 p-3 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded border p-3" style={{ borderColor: "rgba(155,89,255,0.42)", background: "linear-gradient(180deg, rgba(3,7,18,0.98), rgba(7,5,22,0.96))", boxShadow: "0 0 36px rgba(155,89,255,0.20)" }}>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-[0.32em]" style={{ color: VIOLET }}>Fenêtre vision SLS</div>
+                <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-slate-500">module expérimental / interprétation visuelle séparée</div>
+              </div>
+              <button type="button" onClick={() => setVisionOpen(false)} className="rounded border px-2 py-1 text-[8px] font-mono uppercase tracking-[0.16em]" style={{ borderColor: "rgba(126,232,255,0.24)", color: CYAN }}>
+                fermer
+              </button>
+            </div>
+            <SlsCamera active={active} features={audioFeatures} progress={progress} sensors={sensors} />
+          </div>
         </div>
-      </Panel>
-
-      <Panel className="sm:col-span-1">
-        <MiniHeader label="VISION / SILHOUETTE" status={active ? "TRACK" : "IDLE"} />
-        <SlsCamera active={active} features={audioFeatures} progress={progress} sensors={sensors} />
-      </Panel>
-    </section>
+      )}
+    </>
   );
 }
