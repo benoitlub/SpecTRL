@@ -19,7 +19,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Journal",
     support: "Soutenir",
     journalTitle: "Journal spectral compact",
-    footer: "Feuch Institute // SpecTRL v0.5 DARK SCAN // Scanner remonté // journal sous traduction",
+    footer: "Feuch Institute // SpecTRL v0.6 COMPACT SCAN // traduction prioritaire mobile",
   },
   en: {
     actions: "Actions",
@@ -28,7 +28,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Journal",
     support: "Support",
     journalTitle: "Compact spectral journal",
-    footer: "Feuch Institute // SpecTRL v0.5 DARK SCAN // Raised scanner // journal below translation",
+    footer: "Feuch Institute // SpecTRL v0.6 COMPACT SCAN // mobile translation priority",
   },
   es: {
     actions: "Acciones",
@@ -37,7 +37,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Diario",
     support: "Apoyar",
     journalTitle: "Diario espectral compacto",
-    footer: "Feuch Institute // SpecTRL v0.5 DARK SCAN // Escáner elevado // diario bajo traducción",
+    footer: "Feuch Institute // SpecTRL v0.6 COMPACT SCAN // traducción prioritaria móvil",
   },
 };
 
@@ -49,7 +49,7 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
           <div>
             <div className="flex flex-wrap items-baseline gap-3">
               <h1 className="font-mono text-2xl font-black uppercase tracking-[0.22em] text-cyan-200 sm:text-3xl">SpecTRL</h1>
-              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.5 DARK SCAN</span>
+              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.6 COMPACT SCAN</span>
             </div>
             <div className="mt-1 text-[9px] font-mono uppercase tracking-[0.30em] text-orange-300/70">Feuch Institute // Marty trace resonance logger</div>
           </div>
@@ -153,10 +153,23 @@ export default function Home() {
 
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[0.9fr_1.1fr]">
           <SpeciesPanel state={state} lang={lang} />
-          <SensorScreensV3 active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
+          <div className="hidden lg:block">
+            <SensorScreensV3 compact active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1.08fr_0.92fr]">
+        <div className="space-y-3 lg:hidden">
+          <TranslationCard state={state} lang={lang} />
+          <SensorScreensV3 compact active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
+          {showJournal && (
+            <div className="rounded-2xl border border-purple-300/20 bg-slate-950/60 p-2">
+              <div className="px-2 pb-2 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-200/70">{ACTION_COPY[lang].journalTitle}</div>
+              <SpectralJournal latestEntry={latestEntry} compact />
+            </div>
+          )}
+        </div>
+
+        <div className="hidden gap-3 lg:grid lg:grid-cols-[1.08fr_0.92fr]">
           <div className="space-y-3">
             <TranslationCard state={state} lang={lang} />
             {showJournal && (
@@ -172,6 +185,12 @@ export default function Home() {
             <NeuralPanel state={state} lang={lang} />
             <ActionPanel lang={lang} showJournal={showJournal} setShowJournal={setShowJournal} latestEntry={latestEntry} />
           </div>
+        </div>
+
+        <div className="space-y-3 lg:hidden">
+          <SignalQualityPanel state={state} scanProgress={state.scanProgress} lang={lang} />
+          <NeuralPanel state={state} lang={lang} />
+          <ActionPanel lang={lang} showJournal={showJournal} setShowJournal={setShowJournal} latestEntry={latestEntry} />
         </div>
       </main>
 
