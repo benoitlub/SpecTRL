@@ -9,6 +9,7 @@ import {
 } from "../utils/spectralJournal";
 
 const APP_URL = "https://benoitlub.github.io/SpecTRL/";
+const PAYPAL_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=benoitlubert@gmail.com&currency_code=EUR&item_name=Support+SpecTRL";
 const LAB_LINE = "Aucune entité n’a été rémunérée pendant cette manifestation. Marty Labs accepte les dons en piles, en silence ou en Wi-Fi stable.";
 const SHARE_CTA_TEXT = "Scanne toi aussi les tyrans du courant d’air :";
 const SHARE_CTA = `${SHARE_CTA_TEXT}\n${APP_URL}`;
@@ -45,7 +46,7 @@ function buildShareText(entry: SpectralJournalEntry, includeUrl = true) {
   ].join("\n");
 }
 
-export function SpectralJournal({ latestEntry }: { latestEntry: SpectralJournalEntry | null }) {
+export function SpectralJournal({ latestEntry, compact = false }: { latestEntry: SpectralJournalEntry | null; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState<SpectralJournalEntry[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -56,6 +57,7 @@ export function SpectralJournal({ latestEntry }: { latestEntry: SpectralJournalE
   }, [latestEntry]);
 
   const selected = useMemo(() => entries.find(entry => entry.id === selectedId) || entries[0] || null, [entries, selectedId]);
+  const visibleEntries = compact ? entries.slice(0, 5) : entries;
 
   const updateSelected = (patch: Partial<SpectralJournalEntry>) => {
     if (!selected) return;
@@ -100,12 +102,16 @@ export function SpectralJournal({ latestEntry }: { latestEntry: SpectralJournalE
     }
   };
 
+  const donate = () => {
+    window.open(PAYPAL_URL, "_blank", "noopener,noreferrer");
+  };
+
   const copyLabLine = async () => {
     try {
-      await navigator.clipboard.writeText(`${LAB_LINE}\n\n${SHARE_CTA}`);
-      setShareStatus("Appel Marty copié avec le lien.");
+      await navigator.clipboard.writeText(`${LAB_LINE}\n\n${SHARE_CTA}\n\nDon PayPal : benoitlubert@gmail.com`);
+      setShareStatus("Appel Marty copié avec le lien et le PayPal.");
     } catch {
-      setShareStatus(`${LAB_LINE}\n\n${SHARE_CTA}`);
+      setShareStatus(`${LAB_LINE}\n\n${SHARE_CTA}\n\nPayPal : benoitlubert@gmail.com`);
     }
   };
 
@@ -134,14 +140,14 @@ export function SpectralJournal({ latestEntry }: { latestEntry: SpectralJournalE
       )}
 
       {open && (
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-3">
-          <div className="space-y-1 max-h-64 overflow-auto pr-1">
+        <div className="mt-3 grid grid-cols-1 gap-3">
+          <div className="space-y-1 max-h-44 overflow-auto pr-1">
             {entries.length === 0 && (
               <div className="text-[9px] font-mono text-gray-600 tracking-wider border rounded p-2" style={{ borderColor: "#ffffff11" }}>
                 Aucune rémanence archivée. Appuie sur STOP après un scan pour capturer une trace Marty.
               </div>
             )}
-            {entries.map(entry => (
+            {visibleEntries.map(entry => (
               <button
                 key={entry.id}
                 type="button"
@@ -179,43 +185,48 @@ export function SpectralJournal({ latestEntry }: { latestEntry: SpectralJournalE
                 {selected.translation}
               </div>
 
-              <div className="flex flex-wrap gap-1">
-                <Metric label="Freq" value={selected.metrics.dominantFreq} suffix="Hz" />
-                <Metric label="Spectre" value={selected.metrics.spectralCentroid} suffix="Hz" />
-                <Metric label="RMS" value={selected.metrics.rms} suffix="%" />
-                <Metric label="Résonance" value={selected.metrics.resonance} suffix="%" />
-                <Metric label="Clarté" value={selected.metrics.clarity} suffix="%" />
-              </div>
+              {!compact && (
+                <>
+                  <div className="flex flex-wrap gap-1">
+                    <Metric label="Freq" value={selected.metrics.dominantFreq} suffix="Hz" />
+                    <Metric label="Spectre" value={selected.metrics.spectralCentroid} suffix="Hz" />
+                    <Metric label="RMS" value={selected.metrics.rms} suffix="%" />
+                    <Metric label="Résonance" value={selected.metrics.resonance} suffix="%" />
+                    <Metric label="Clarté" value={selected.metrics.clarity} suffix="%" />
+                  </div>
 
-              <label className="block space-y-1">
-                <span className="text-[8px] font-mono text-gray-500 tracking-wider uppercase">Lieu / contexte</span>
-                <input
-                  value={selected.locationNote}
-                  onChange={event => updateSelected({ locationNote: event.target.value })}
-                  placeholder="Salon, couloir, cuisine, grenier, rideau vexé..."
-                  className="w-full rounded border bg-transparent px-2 py-1 text-[10px] font-mono text-gray-200 outline-none"
-                  style={{ borderColor: "#ffffff18" }}
-                />
-              </label>
+                  <label className="block space-y-1">
+                    <span className="text-[8px] font-mono text-gray-500 tracking-wider uppercase">Lieu / contexte</span>
+                    <input
+                      value={selected.locationNote}
+                      onChange={event => updateSelected({ locationNote: event.target.value })}
+                      placeholder="Salon, couloir, cuisine, grenier, rideau vexé..."
+                      className="w-full rounded border bg-transparent px-2 py-1 text-[10px] font-mono text-gray-200 outline-none"
+                      style={{ borderColor: "#ffffff18" }}
+                    />
+                  </label>
 
-              <label className="block space-y-1">
-                <span className="text-[8px] font-mono text-gray-500 tracking-wider uppercase">Notes</span>
-                <textarea
-                  value={selected.userNotes}
-                  onChange={event => updateSelected({ userNotes: event.target.value })}
-                  placeholder="Ex : rideau immobile mais arrogant, box suspecte, café tiède..."
-                  className="w-full min-h-16 rounded border bg-transparent px-2 py-1 text-[10px] font-mono text-gray-200 outline-none"
-                  style={{ borderColor: "#ffffff18" }}
-                />
-              </label>
+                  <label className="block space-y-1">
+                    <span className="text-[8px] font-mono text-gray-500 tracking-wider uppercase">Notes</span>
+                    <textarea
+                      value={selected.userNotes}
+                      onChange={event => updateSelected({ userNotes: event.target.value })}
+                      placeholder="Ex : rideau immobile mais arrogant, box suspecte, café tiède..."
+                      className="w-full min-h-16 rounded border bg-transparent px-2 py-1 text-[10px] font-mono text-gray-200 outline-none"
+                      style={{ borderColor: "#ffffff18" }}
+                    />
+                  </label>
+                </>
+              )}
 
               <div className="rounded border p-2 space-y-1" style={{ borderColor: "#9b59ff22", background: "rgba(155,89,255,0.04)" }}>
-                <div className="text-[8px] font-mono tracking-[0.22em] uppercase text-purple-300/80">Partager la manifestation</div>
+                <div className="text-[8px] font-mono tracking-[0.22em] uppercase text-purple-300/80">Partager / soutenir</div>
                 <div className="text-[9px] font-mono text-purple-100/70 leading-relaxed">{LAB_LINE}</div>
                 <div className="text-[8px] font-mono text-cyan-200/70 leading-relaxed whitespace-pre-line">{SHARE_CTA}</div>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  <button type="button" onClick={shareSelected} className="text-[8px] font-mono tracking-wider text-cyan-300 uppercase">Partager cette trace</button>
-                  <button type="button" onClick={copyLabLine} className="text-[8px] font-mono tracking-wider text-purple-300 uppercase">Copier l’appel Marty</button>
+                  <button type="button" onClick={shareSelected} className="rounded border border-cyan-300/25 px-2 py-1 text-[8px] font-mono tracking-wider text-cyan-300 uppercase">Partager</button>
+                  <button type="button" onClick={donate} className="rounded border border-orange-300/25 px-2 py-1 text-[8px] font-mono tracking-wider text-orange-300 uppercase">Don PayPal</button>
+                  <button type="button" onClick={copyLabLine} className="rounded border border-purple-300/25 px-2 py-1 text-[8px] font-mono tracking-wider text-purple-300 uppercase">Copier appel</button>
                 </div>
                 {shareStatus && <div className="text-[8px] font-mono text-green-300/70 tracking-wider pt-1 whitespace-pre-line">{shareStatus}</div>}
               </div>
