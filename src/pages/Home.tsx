@@ -146,6 +146,10 @@ export default function Home() {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#01040c] text-slate-100">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(0,212,255,0.14),transparent_32%),radial-gradient(circle_at_85%_10%,rgba(155,89,255,0.16),transparent_34%)]" />
+      <div className={`spectrl-cctv-layer ${active ? "spectrl-cctv-active" : ""}`} />
+      <div className="spectrl-cctv-band" style={{ top: active ? "12vh" : "24vh" }} />
+      <div className="spectrl-cctv-band" style={{ top: active ? "34vh" : "58vh" }} />
+      <div className="spectrl-cctv-label">CCTV // TRACE // {active ? "LIVE" : "IDLE"}</div>
       <Header lang={lang} setLang={setLang} />
 
       <main className="relative z-10 mx-auto max-w-5xl space-y-3 px-3 py-3 pb-44">
