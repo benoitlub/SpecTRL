@@ -136,7 +136,7 @@ export const UI_LABELS: typeof BASE_UI_LABELS = {
   },
 };
 
-export type { AnalysisState, AudioFeatures };
+export type { Lang, AnalysisState, AudioFeatures };
 export type AnimalId = "crow" | "pigeon" | "duck" | "cat" | "dog" | "owl";
 export type Animal = {
   id: AnimalId;
