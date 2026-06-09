@@ -191,7 +191,7 @@ export function BiologicalPanel({ state, lang }: { state: AnalysisState; lang: L
 export function NeuralPanel({ state, lang }: { state: AnalysisState; lang: Lang }) {
   const t = UI_LABELS[lang];
   const active = isActive(state);
-  const patterns = state.species?.neuralPatterns || ["SIGNAL_LOCK", "BIOACOUSTIC_SYNC", "FIELD_BUFFER"];
+  const patterns = state.species?.neuralPatterns || ["SIGNAL_LOCK", "SPECTRAL_SYNC", "FIELD_BUFFER"];
   return (
     <Panel label={t.neural} accent="#9b59ff">
       {active ? (
@@ -245,7 +245,7 @@ export function SignalQualityPanel({ state, scanProgress, lang }: { state: Analy
         <Bar value={signal} color="#00d4ff" label={t.strength} sublabel={`${Math.floor(signal)}%`} />
         <div className="flex justify-between text-[8px] font-mono text-gray-600 tracking-wider">
           <span>{t.freq}: {active ? "0.2–10 kHz" : "---"}</span>
-          <span>{t.codec}: CREATURE-SYNC/v3</span>
+          <span>{t.codec}: SPECTRL/v3</span>
         </div>
       </div>
     </Panel>
