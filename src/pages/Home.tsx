@@ -19,7 +19,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Journal",
     support: "Soutenir",
     journalTitle: "Journal spectral compact",
-    footer: "Feuch Institute // SpecTRL v0.6 COMPACT SCAN // traduction prioritaire mobile",
+    footer: "Feuch Institute // SpecTRL v0.7 RADAR RIGHT // radar première ligne // traduction dessous",
   },
   en: {
     actions: "Actions",
@@ -28,7 +28,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Journal",
     support: "Support",
     journalTitle: "Compact spectral journal",
-    footer: "Feuch Institute // SpecTRL v0.6 COMPACT SCAN // mobile translation priority",
+    footer: "Feuch Institute // SpecTRL v0.7 RADAR RIGHT // first-row radar // translation below",
   },
   es: {
     actions: "Acciones",
@@ -37,7 +37,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Diario",
     support: "Apoyar",
     journalTitle: "Diario espectral compacto",
-    footer: "Feuch Institute // SpecTRL v0.6 COMPACT SCAN // traducción prioritaria móvil",
+    footer: "Feuch Institute // SpecTRL v0.7 RADAR RIGHT // radar primera línea // traducción debajo",
   },
 };
 
@@ -49,7 +49,7 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
           <div>
             <div className="flex flex-wrap items-baseline gap-3">
               <h1 className="font-mono text-2xl font-black uppercase tracking-[0.22em] text-cyan-200 sm:text-3xl">SpecTRL</h1>
-              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.6 COMPACT SCAN</span>
+              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.7 RADAR RIGHT</span>
             </div>
             <div className="mt-1 text-[9px] font-mono uppercase tracking-[0.30em] text-orange-300/70">Feuch Institute // Marty trace resonance logger</div>
           </div>
@@ -151,16 +151,13 @@ export default function Home() {
       <main className="relative z-10 mx-auto max-w-5xl space-y-3 px-3 py-3 pb-44">
         {micPermission === "denied" && <div className="rounded border border-red-300/30 bg-red-500/10 px-3 py-2 text-[10px] font-mono uppercase tracking-wider text-red-200">Micro refusé ou indisponible.</div>}
 
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid grid-cols-[0.92fr_1.08fr] items-start gap-2 sm:gap-3 lg:grid-cols-[0.9fr_1.1fr]">
           <SpeciesPanel state={state} lang={lang} />
-          <div className="hidden lg:block">
-            <SensorScreensV3 compact active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
-          </div>
+          <SensorScreensV3 compact active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
         </div>
 
-        <div className="space-y-3 lg:hidden">
+        <div className="space-y-3">
           <TranslationCard state={state} lang={lang} />
-          <SensorScreensV3 compact active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
           {showJournal && (
             <div className="rounded-2xl border border-purple-300/20 bg-slate-950/60 p-2">
               <div className="px-2 pb-2 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-200/70">{ACTION_COPY[lang].journalTitle}</div>
@@ -169,29 +166,12 @@ export default function Home() {
           )}
         </div>
 
-        <div className="hidden gap-3 lg:grid lg:grid-cols-[1.08fr_0.92fr]">
-          <div className="space-y-3">
-            <TranslationCard state={state} lang={lang} />
-            {showJournal && (
-              <div className="rounded-2xl border border-purple-300/20 bg-slate-950/60 p-2">
-                <div className="px-2 pb-2 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-200/70">{ACTION_COPY[lang].journalTitle}</div>
-                <SpectralJournal latestEntry={latestEntry} compact />
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <SignalQualityPanel state={state} scanProgress={state.scanProgress} lang={lang} />
-            <NeuralPanel state={state} lang={lang} />
-            <ActionPanel lang={lang} showJournal={showJournal} setShowJournal={setShowJournal} latestEntry={latestEntry} />
-          </div>
-        </div>
-
-        <div className="space-y-3 lg:hidden">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <SignalQualityPanel state={state} scanProgress={state.scanProgress} lang={lang} />
           <NeuralPanel state={state} lang={lang} />
-          <ActionPanel lang={lang} showJournal={showJournal} setShowJournal={setShowJournal} latestEntry={latestEntry} />
         </div>
+
+        <ActionPanel lang={lang} showJournal={showJournal} setShowJournal={setShowJournal} latestEntry={latestEntry} />
       </main>
 
       <MicButton isListening={state.isListening} isAnalyzing={state.isAnalyzing} isComplete={state.isComplete} onStart={startListening} onStop={stopListening} onReset={reset} lang={lang} signalQuality={state.signalQuality || state.scanProgress} habitat={state.environmentalScan || "TRACE"} />
