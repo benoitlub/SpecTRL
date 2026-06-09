@@ -9,6 +9,36 @@ import { SpeciesPanel, SignalQualityPanel, NeuralPanel } from "../components/Ana
 import { type Lang } from "../data/animals";
 import { createSpectralJournalEntry, saveSpectralJournalEntry, type SpectralJournalEntry } from "../utils/spectralJournal";
 
+const ACTION_COPY: Record<Lang, { actions: string; exportSoon: string; hideJournal: string; journal: string; helpSoon: string; journalTitle: string; footer: string }> = {
+  fr: {
+    actions: "Actions",
+    exportSoon: "Exporter bientôt",
+    hideJournal: "Masquer journal",
+    journal: "Journal",
+    helpSoon: "Aider bientôt",
+    journalTitle: "Journal spectral // modèle Creature-sync",
+    footer: "Feuch Institute // SpecTRL v0.3 CREATURE MODEL // Journal local // actions prioritaires",
+  },
+  en: {
+    actions: "Actions",
+    exportSoon: "Export soon",
+    hideJournal: "Hide journal",
+    journal: "Journal",
+    helpSoon: "Support soon",
+    journalTitle: "Spectral journal // Creature-sync model",
+    footer: "Feuch Institute // SpecTRL v0.3 CREATURE MODEL // Local journal // priority actions",
+  },
+  es: {
+    actions: "Acciones",
+    exportSoon: "Exportar pronto",
+    hideJournal: "Ocultar diario",
+    journal: "Diario",
+    helpSoon: "Apoyar pronto",
+    journalTitle: "Diario espectral // modelo Creature-sync",
+    footer: "Feuch Institute // SpecTRL v0.3 CREATURE MODEL // Diario local // acciones prioritarias",
+  },
+};
+
 function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }) {
   return (
     <header className="relative z-10 px-3 pt-3">
@@ -32,27 +62,28 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
   );
 }
 
-function Footer() {
+function Footer({ lang }: { lang: Lang }) {
   return (
     <footer className="relative z-10 mx-auto max-w-5xl px-3 pb-44 pt-4">
       <div className="rounded-xl border border-cyan-300/15 bg-slate-950/70 px-3 py-2 text-center text-[8px] font-mono uppercase tracking-[0.22em] text-cyan-100/50">
-        Feuch Institute // SpecTRL v0.3 CREATURE MODEL // Journal local // actions prioritaires
+        {ACTION_COPY[lang].footer}
       </div>
     </footer>
   );
 }
 
-function ActionPanel({ showJournal, setShowJournal }: { showJournal: boolean; setShowJournal: (value: boolean) => void }) {
+function ActionPanel({ lang, showJournal, setShowJournal }: { lang: Lang; showJournal: boolean; setShowJournal: (value: boolean) => void }) {
+  const copy = ACTION_COPY[lang];
   return (
     <div className="rounded-2xl border border-orange-300/25 bg-slate-950/70 p-3 shadow-[0_0_24px_rgba(255,140,0,0.08)]">
       <div className="mb-2 flex items-center justify-between">
-        <div className="text-[9px] font-mono uppercase tracking-[0.30em] text-orange-200/75">Actions</div>
+        <div className="text-[9px] font-mono uppercase tracking-[0.30em] text-orange-200/75">{copy.actions}</div>
         <div className="text-[8px] font-mono uppercase tracking-[0.22em] text-white/30">Feuch Institute</div>
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <button type="button" className="rounded border border-cyan-300/35 bg-cyan-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-100">Exporter bientôt</button>
-        <button type="button" onClick={() => setShowJournal(!showJournal)} className="rounded border border-purple-300/35 bg-purple-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-purple-100">{showJournal ? "Masquer journal" : "Journal"}</button>
-        <button type="button" className="rounded border border-orange-300/40 bg-orange-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-orange-100">Aider bientôt</button>
+        <button type="button" className="rounded border border-cyan-300/35 bg-cyan-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-100">{copy.exportSoon}</button>
+        <button type="button" onClick={() => setShowJournal(!showJournal)} className="rounded border border-purple-300/35 bg-purple-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-purple-100">{showJournal ? copy.hideJournal : copy.journal}</button>
+        <button type="button" className="rounded border border-orange-300/40 bg-orange-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-orange-100">{copy.helpSoon}</button>
       </div>
     </div>
   );
@@ -103,18 +134,18 @@ export default function Home() {
           <NeuralPanel state={state} lang={lang} />
         </div>
 
-        <ActionPanel showJournal={showJournal} setShowJournal={setShowJournal} />
+        <ActionPanel lang={lang} showJournal={showJournal} setShowJournal={setShowJournal} />
 
         {showJournal && (
           <div className="rounded-2xl border border-purple-300/20 bg-slate-950/60 p-2">
-            <div className="px-2 pb-2 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-200/70">Journal spectral // modèle Creature-sync</div>
+            <div className="px-2 pb-2 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-200/70">{ACTION_COPY[lang].journalTitle}</div>
             <SpectralJournal latestEntry={latestEntry} />
           </div>
         )}
       </main>
 
       <MicButton isListening={state.isListening} isAnalyzing={state.isAnalyzing} isComplete={state.isComplete} onStart={startListening} onStop={stopListening} onReset={reset} lang={lang} signalQuality={state.signalQuality || state.scanProgress} habitat={state.environmentalScan || "TRACE"} />
-      <Footer />
+      <Footer lang={lang} />
     </div>
   );
 }
