@@ -17,7 +17,7 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
           <div>
             <div className="flex flex-wrap items-baseline gap-3">
               <h1 className="font-mono text-2xl font-black uppercase tracking-[0.22em] text-cyan-200 sm:text-3xl">SpecTRL</h1>
-              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.2.1 RESTORED</span>
+              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.3 CREATURE MODEL</span>
             </div>
             <div className="mt-1 text-[9px] font-mono uppercase tracking-[0.30em] text-orange-300/70">Feuch Institute // Marty trace resonance logger</div>
           </div>
@@ -36,15 +36,32 @@ function Footer() {
   return (
     <footer className="relative z-10 mx-auto max-w-5xl px-3 pb-44 pt-4">
       <div className="rounded-xl border border-cyan-300/15 bg-slate-950/70 px-3 py-2 text-center text-[8px] font-mono uppercase tracking-[0.22em] text-cyan-100/50">
-        Feuch Institute // SpecTRL v0.2.1 RESTORED // Journal local // partage + appel Marty
+        Feuch Institute // SpecTRL v0.3 CREATURE MODEL // Journal local // actions prioritaires
       </div>
     </footer>
+  );
+}
+
+function ActionPanel({ showJournal, setShowJournal }: { showJournal: boolean; setShowJournal: (value: boolean) => void }) {
+  return (
+    <div className="rounded-2xl border border-orange-300/25 bg-slate-950/70 p-3 shadow-[0_0_24px_rgba(255,140,0,0.08)]">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="text-[9px] font-mono uppercase tracking-[0.30em] text-orange-200/75">Actions</div>
+        <div className="text-[8px] font-mono uppercase tracking-[0.22em] text-white/30">Feuch Institute</div>
+      </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <button type="button" className="rounded border border-cyan-300/35 bg-cyan-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-100">Exporter bientôt</button>
+        <button type="button" onClick={() => setShowJournal(!showJournal)} className="rounded border border-purple-300/35 bg-purple-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-purple-100">{showJournal ? "Masquer journal" : "Journal"}</button>
+        <button type="button" className="rounded border border-orange-300/40 bg-orange-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-orange-100">Aider bientôt</button>
+      </div>
+    </div>
   );
 }
 
 export default function Home() {
   const { state, micPermission, audioFeatures, detectedLabel, lang, setLang, startListening, stopListening, reset } = useAudioAnalysis();
   const [latestEntry, setLatestEntry] = useState<SpectralJournalEntry | null>(null);
+  const [showJournal, setShowJournal] = useState(false);
   const savedKey = useRef("");
   const active = state.isListening || state.isAnalyzing;
 
@@ -58,6 +75,7 @@ export default function Home() {
     if (!entry) return;
     saveSpectralJournalEntry(entry);
     setLatestEntry(entry);
+    setShowJournal(true);
     savedKey.current = key;
   }, [state, audioFeatures]);
 
@@ -73,21 +91,26 @@ export default function Home() {
       <main className="relative z-10 mx-auto max-w-5xl space-y-3 px-3 py-3 pb-44">
         {micPermission === "denied" && <div className="rounded border border-red-300/30 bg-red-500/10 px-3 py-2 text-[10px] font-mono uppercase tracking-wider text-red-200">Micro refusé ou indisponible.</div>}
 
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[0.85fr_1.15fr]">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[0.92fr_1.08fr]">
           <SpeciesPanel state={state} lang={lang} />
-          <SensorScreensV3 active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
+          <TranslationCard state={state} lang={lang} />
         </div>
 
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[0.85fr_1.2fr_0.95fr]">
+        <SensorScreensV3 active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
+
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <SignalQualityPanel state={state} scanProgress={state.scanProgress} lang={lang} />
-          <TranslationCard state={state} lang={lang} />
           <NeuralPanel state={state} lang={lang} />
         </div>
 
-        <div className="rounded-2xl border border-purple-300/20 bg-slate-950/60 p-2">
-          <div className="px-2 pb-2 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-200/70">Journal spectral // partage // appel aux dons</div>
-          <SpectralJournal latestEntry={latestEntry} />
-        </div>
+        <ActionPanel showJournal={showJournal} setShowJournal={setShowJournal} />
+
+        {showJournal && (
+          <div className="rounded-2xl border border-purple-300/20 bg-slate-950/60 p-2">
+            <div className="px-2 pb-2 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-200/70">Journal spectral // modèle Creature-sync</div>
+            <SpectralJournal latestEntry={latestEntry} />
+          </div>
+        )}
       </main>
 
       <MicButton isListening={state.isListening} isAnalyzing={state.isAnalyzing} isComplete={state.isComplete} onStart={startListening} onStop={stopListening} onReset={reset} lang={lang} signalQuality={state.signalQuality || state.scanProgress} habitat={state.environmentalScan || "TRACE"} />
