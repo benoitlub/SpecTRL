@@ -49,7 +49,7 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-2">
               <h1 className="font-mono text-xl font-black tracking-[0.10em] text-cyan-200 sm:text-2xl">SpecTRL</h1>
-              <span className="rounded border border-purple-300/25 px-1.5 py-0.5 text-[7px] font-mono uppercase tracking-[0.18em] text-purple-100/75">v1.1</span>
+              <span className="rounded border border-purple-300/25 px-1.5 py-0.5 text-[7px] font-mono uppercase tracking-[0.18em] text-purple-100/75">v1.2</span>
             </div>
             <div className="mt-0.5 truncate text-[7px] font-mono uppercase tracking-[0.20em] text-orange-300/62 sm:text-[8px]">Feuch Institute // Marty logger</div>
           </div>
@@ -122,34 +122,58 @@ export default function Home() {
   const { state, micPermission, audioFeatures, detectedLabel, lang, setLang, startListening, stopListening, reset } = useAudioAnalysis();
   const [latestEntry, setLatestEntry] = useState<SpectralJournalEntry | null>(null);
   const [showJournal, setShowJournal] = useState(false);
+  const [motionLevel, setMotionLevel] = useState(0);
   const savedKey = useRef("");
   const active = state.isListening || state.isAnalyzing;
+  const currentFeatures = audioFeatures || state.audioFeatures;
+  const micLevel = Math.min(1, Math.max(0, (currentFeatures?.rms || 0) * 12 + (currentFeatures?.flatness || 0) * 0.25));
+  const sensorLevel = Math.min(1, Math.max(micLevel, motionLevel));
 
-  useSpectralBeeps(active, state.scanProgress, state.isComplete);
+  useSpectralBeeps(active, state.scanProgress, state.isComplete, currentFeatures);
+
+  useEffect(() => {
+    const onMotion = (event: DeviceMotionEvent) => {
+      const acc = event.accelerationIncludingGravity;
+      const total = Math.abs(acc?.x || 0) + Math.abs(acc?.y || 0) + Math.abs(acc?.z || 0);
+      setMotionLevel(prev => Math.max(prev * 0.86, Math.min(1, Math.max(0, (total - 9.8) / 11))));
+    };
+    const onOrientation = (event: DeviceOrientationEvent) => {
+      const total = Math.abs(event.beta || 0) + Math.abs(event.gamma || 0);
+      setMotionLevel(prev => Math.max(prev * 0.9, Math.min(1, total / 180)));
+    };
+    window.addEventListener("devicemotion", onMotion);
+    window.addEventListener("deviceorientation", onOrientation);
+    const decay = window.setInterval(() => setMotionLevel(prev => prev * 0.82), 250);
+    return () => {
+      window.removeEventListener("devicemotion", onMotion);
+      window.removeEventListener("deviceorientation", onOrientation);
+      window.clearInterval(decay);
+    };
+  }, []);
 
   useEffect(() => {
     if (!state.isComplete || !state.translation) return;
     const key = `${state.translation}-${state.confidence}-${state.detectedSpecies}`;
     if (savedKey.current === key) return;
-    const entry = createSpectralJournalEntry(state, audioFeatures || state.audioFeatures);
+    const entry = createSpectralJournalEntry(state, currentFeatures);
     if (!entry) return;
     saveSpectralJournalEntry(entry);
     setLatestEntry(entry);
     setShowJournal(true);
     savedKey.current = key;
-  }, [state, audioFeatures]);
+  }, [state, currentFeatures]);
 
   useEffect(() => {
     if (state.isListening) savedKey.current = "";
   }, [state.isListening]);
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#01040c] text-slate-100">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#01040c] text-slate-100" style={{ "--spectrl-sensor": sensorLevel } as React.CSSProperties}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(0,212,255,0.14),transparent_32%),radial-gradient(circle_at_85%_10%,rgba(155,89,255,0.16),transparent_34%)]" />
-      <div className={`spectrl-cctv-layer ${active ? "spectrl-cctv-active" : ""}`} />
-      <div className="spectrl-cctv-band" style={{ top: active ? "12vh" : "24vh" }} />
-      <div className="spectrl-cctv-band" style={{ top: active ? "34vh" : "58vh" }} />
-      <div className="spectrl-cctv-label">CCTV // TRACE // {active ? "LIVE" : "IDLE"}</div>
+      <div className={`spectrl-cctv-layer ${active ? "spectrl-cctv-active" : ""}`} style={{ opacity: active ? 0.55 + sensorLevel * 0.28 : 0.32 + sensorLevel * 0.16 }} />
+      <div className="spectrl-cctv-band" style={{ top: `${active ? 8 + sensorLevel * 16 : 24}vh`, opacity: 0.12 + sensorLevel * 0.28 }} />
+      <div className="spectrl-cctv-band" style={{ top: `${active ? 30 + sensorLevel * 30 : 58}vh`, opacity: 0.08 + sensorLevel * 0.22 }} />
+      <div className="spectrl-cctv-label">CCTV // TRACE // {active ? "LIVE" : "IDLE"} // MIC {Math.round(micLevel * 99)} // MOT {Math.round(motionLevel * 99)}</div>
       <Header lang={lang} setLang={setLang} />
 
       <main className="relative z-10 mx-auto max-w-5xl space-y-3 px-3 py-3 pb-44">
@@ -157,7 +181,7 @@ export default function Home() {
 
         <div className="grid grid-cols-[0.92fr_1.08fr] items-start gap-2 sm:gap-3 lg:grid-cols-[0.9fr_1.1fr]">
           <SpeciesPanel state={state} lang={lang} />
-          <SensorScreensV3 radarOnly compact active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
+          <SensorScreensV3 radarOnly compact active={active} audioFeatures={currentFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
         </div>
 
         <div className="space-y-3">
