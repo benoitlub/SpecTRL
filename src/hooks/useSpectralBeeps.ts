@@ -24,14 +24,14 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       if (!AudioCtor) return null;
       const ctx = new AudioCtor();
       const master = ctx.createGain();
-      master.gain.value = 0.035;
+      master.gain.value = 0.055;
       master.connect(ctx.destination);
       ctxRef.current = ctx;
       masterRef.current = master;
       return ctx;
     };
 
-    const playTone = (frequency: number, duration = 0.08, volume = 0.045, type: OscillatorType = "sine") => {
+    const playTone = (frequency: number, duration = 0.08, volume = 0.05, type: OscillatorType = "sine") => {
       const ctx = ensureContext();
       const master = masterRef.current;
       if (!ctx || !master) return;
@@ -43,8 +43,8 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       osc.type = type;
       osc.frequency.setValueAtTime(frequency, now);
       filter.type = "bandpass";
-      filter.frequency.setValueAtTime(frequency * 1.35, now);
-      filter.Q.value = 1.6;
+      filter.frequency.setValueAtTime(frequency * 1.32, now);
+      filter.Q.value = 4.8;
       gain.gain.setValueAtTime(0.0001, now);
       gain.gain.exponentialRampToValueAtTime(volume, now + 0.012);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
@@ -53,6 +53,26 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       gain.connect(master);
       osc.start(now);
       osc.stop(now + duration + 0.03);
+    };
+
+    const playAirCrackle = () => {
+      const ctx = ensureContext();
+      const master = masterRef.current;
+      if (!ctx || !master) return;
+      const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.055), ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
+      const source = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      filter.type = "highpass";
+      filter.frequency.value = 1800;
+      gain.gain.value = 0.018;
+      source.buffer = buffer;
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(master);
+      source.start();
     };
 
     const startHum = () => {
@@ -65,9 +85,9 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const humFilter = ctx.createBiquadFilter();
       hum.type = "triangle";
       hum.frequency.value = 58;
-      humGain.gain.value = 0.004;
+      humGain.gain.value = 0.007;
       humFilter.type = "lowpass";
-      humFilter.frequency.value = 420;
+      humFilter.frequency.value = 460;
       hum.connect(humFilter);
       humFilter.connect(humGain);
       humGain.connect(master);
@@ -90,21 +110,24 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       wasActiveRef.current = true;
       startHum();
       stopTimer();
-      const interval = Math.max(430, 1350 - progress * 8);
+      const interval = Math.max(360, 1120 - progress * 7);
       timerRef.current = window.setInterval(() => {
-        const base = 360 + progress * 4;
-        const offset = Math.random() > 0.72 ? 420 : 0;
-        const freq = base + offset + Math.random() * 120;
-        const type: OscillatorType = Math.random() > 0.65 ? "triangle" : "sine";
-        playTone(freq, 0.055 + Math.random() * 0.05, 0.025 + progress / 4500, type);
-        if (Math.random() > 0.82) playTone(freq * 1.52, 0.045, 0.018, "sine");
+        const base = 300 + progress * 4.6;
+        const offset = Math.random() > 0.62 ? 360 : Math.random() > 0.55 ? 180 : 0;
+        const freq = base + offset + Math.random() * 160;
+        const type: OscillatorType = Math.random() > 0.58 ? "triangle" : "sine";
+        playTone(freq, 0.055 + Math.random() * 0.065, 0.025 + progress / 3500, type);
+        if (Math.random() > 0.72) playTone(freq * 1.49, 0.045, 0.02, "sine");
+        if (Math.random() > 0.78) playAirCrackle();
       }, interval);
     } else {
       stopTimer();
       stopHum();
       if (complete && wasActiveRef.current) {
-        window.setTimeout(() => playTone(220, 0.09, 0.035, "triangle"), 60);
-        window.setTimeout(() => playTone(760, 0.12, 0.04, "sine"), 170);
+        window.setTimeout(() => playTone(220, 0.11, 0.04, "triangle"), 50);
+        window.setTimeout(() => playTone(540, 0.12, 0.045, "sine"), 160);
+        window.setTimeout(() => playTone(880, 0.16, 0.04, "triangle"), 300);
+        window.setTimeout(() => playAirCrackle(), 430);
       }
       wasActiveRef.current = false;
     }
