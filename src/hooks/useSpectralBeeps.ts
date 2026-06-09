@@ -1,8 +1,22 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type WebKitWindow = Window & typeof globalThis & {
   webkitAudioContext?: typeof AudioContext;
 };
+
+type SoundMode = "off" | "low" | "high";
+
+function readSoundMode(): SoundMode {
+  const value = window.localStorage.getItem("spectrl-sound-mode");
+  if (value === "off" || value === "low" || value === "high") return value;
+  return "high";
+}
+
+function soundScale(mode: SoundMode) {
+  if (mode === "off") return 0;
+  if (mode === "low") return 0.38;
+  return 1;
+}
 
 export function useSpectralBeeps(active: boolean, progress: number, complete: boolean) {
   const ctxRef = useRef<AudioContext | null>(null);
@@ -15,8 +29,21 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
   const shimmerGainRef = useRef<GainNode | null>(null);
   const timerRef = useRef<number | null>(null);
   const wasActiveRef = useRef(false);
+  const [mode, setMode] = useState<SoundMode>(() => readSoundMode());
 
   useEffect(() => {
+    const sync = () => setMode(readSoundMode());
+    window.addEventListener("storage", sync);
+    window.addEventListener("spectrl-sound-mode-change", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("spectrl-sound-mode-change", sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    const scale = soundScale(mode);
+
     const stopTimer = () => {
       if (timerRef.current) window.clearInterval(timerRef.current);
       timerRef.current = null;
@@ -28,14 +55,22 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       if (!AudioCtor) return null;
       const ctx = new AudioCtor();
       const master = ctx.createGain();
-      master.gain.value = 0.16;
+      master.gain.value = 0.16 * scale;
       master.connect(ctx.destination);
       ctxRef.current = ctx;
       masterRef.current = master;
       return ctx;
     };
 
+    const updateMaster = () => {
+      const ctx = ctxRef.current;
+      const master = masterRef.current;
+      if (!ctx || !master) return;
+      master.gain.setTargetAtTime(0.16 * scale, ctx.currentTime, 0.08);
+    };
+
     const playTone = (frequency: number, duration = 0.08, volume = 0.08, type: OscillatorType = "sine") => {
+      if (scale <= 0) return;
       const ctx = ensureContext();
       const master = masterRef.current;
       if (!ctx || !master) return;
@@ -50,7 +85,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       filter.frequency.setValueAtTime(frequency * 1.25, now);
       filter.Q.value = 5.8;
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(volume, now + 0.016);
+      gain.gain.exponentialRampToValueAtTime(volume * scale, now + 0.016);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
       osc.connect(filter);
       filter.connect(gain);
@@ -60,6 +95,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
     };
 
     const playAirCrackle = (dark = false) => {
+      if (scale <= 0) return;
       const ctx = ensureContext();
       const master = masterRef.current;
       if (!ctx || !master) return;
@@ -76,7 +112,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       filter.type = dark ? "bandpass" : "highpass";
       filter.frequency.value = dark ? 430 : 1600;
       filter.Q.value = dark ? 4.4 : 1.4;
-      gain.gain.value = dark ? 0.075 : 0.04;
+      gain.gain.value = (dark ? 0.075 : 0.04) * scale;
       source.buffer = buffer;
       source.connect(filter);
       filter.connect(gain);
@@ -85,6 +121,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
     };
 
     const playPulse = () => {
+      if (scale <= 0) return;
       const ctx = ensureContext();
       const master = masterRef.current;
       if (!ctx || !master) return;
@@ -97,7 +134,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       filter.type = "lowpass";
       filter.frequency.value = 160;
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.085, now + 0.045);
+      gain.gain.exponentialRampToValueAtTime(0.085 * scale, now + 0.045);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.48);
       osc.connect(filter);
       filter.connect(gain);
@@ -107,9 +144,12 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
     };
 
     const startHum = () => {
+      if (scale <= 0) return;
       const ctx = ensureContext();
       const master = masterRef.current;
-      if (!ctx || !master || humRef.current) return;
+      if (!ctx || !master) return;
+      updateMaster();
+      if (humRef.current) return;
       void ctx.resume().catch(() => undefined);
 
       const hum = ctx.createOscillator();
@@ -117,7 +157,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const humFilter = ctx.createBiquadFilter();
       hum.type = "triangle";
       hum.frequency.value = 47;
-      humGain.gain.value = 0.028;
+      humGain.gain.value = 0.028 * scale;
       humFilter.type = "lowpass";
       humFilter.frequency.value = 360;
       hum.connect(humFilter);
@@ -130,7 +170,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const subFilter = ctx.createBiquadFilter();
       sub.type = "sine";
       sub.frequency.value = 28;
-      subGain.gain.value = 0.022;
+      subGain.gain.value = 0.022 * scale;
       subFilter.type = "lowpass";
       subFilter.frequency.value = 105;
       sub.connect(subFilter);
@@ -143,7 +183,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const shimmerFilter = ctx.createBiquadFilter();
       shimmer.type = "sawtooth";
       shimmer.frequency.value = 121;
-      shimmerGain.gain.value = 0.009;
+      shimmerGain.gain.value = 0.009 * scale;
       shimmerFilter.type = "bandpass";
       shimmerFilter.frequency.value = 680;
       shimmerFilter.Q.value = 9;
@@ -178,6 +218,12 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       }, 280);
     };
 
+    if (scale <= 0) {
+      stopTimer();
+      stopHum();
+      return () => stopTimer();
+    }
+
     if (active) {
       wasActiveRef.current = true;
       startHum();
@@ -209,7 +255,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
     }
 
     return () => stopTimer();
-  }, [active, progress, complete]);
+  }, [active, progress, complete, mode]);
 
   useEffect(() => () => {
     if (timerRef.current) window.clearInterval(timerRef.current);
