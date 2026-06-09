@@ -226,6 +226,33 @@ export function useAudioAnalysis() {
     };
   }, [lang]);
 
+  useEffect(() => {
+    setState(current => {
+      if (!current.species || !current.translation) return current;
+      const refreshed = buildReading(
+        current.species,
+        current.audioFeatures,
+        current.isComplete,
+        current.confidence || current.speciesConfidence,
+      );
+      return {
+        ...current,
+        ...refreshed,
+        isListening: current.isListening,
+        isAnalyzing: current.isAnalyzing,
+        isComplete: current.isComplete,
+        scanProgress: current.scanProgress,
+        neuralResonance: current.neuralResonance,
+        signalQuality: current.signalQuality,
+        speciesConfidence: current.speciesConfidence || refreshed.speciesConfidence,
+      };
+    });
+  }, [lang, buildReading]);
+
+  useEffect(() => {
+    if (state.species && detectedLabel) setDetectedLabel(state.species.scientificName[lang] || state.species.name);
+  }, [lang, state.species, detectedLabel]);
+
   const publishLiveReading = useCallback((features: AudioFeatures | null, progress: number) => {
     const species = getTraceSpecies(features);
     const confidence = Math.floor(Math.min(88, Math.max(34, progress * 0.75 + Math.random() * 16)));
