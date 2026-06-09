@@ -6,6 +6,7 @@ type SensorScreensV3Props = {
   audioFeatures: AudioFeatures | null;
   progress: number;
   detectedLabel?: string | null;
+  compact?: boolean;
 };
 
 type CameraStatus = "idle" | "loading" | "ready" | "denied";
@@ -53,10 +54,10 @@ function MetricRow({ label, value, hot = false }: { label: string; value: string
   );
 }
 
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Panel({ children, className = "", compact = false }: { children: React.ReactNode; className?: string; compact?: boolean }) {
   return (
     <div
-      className={`rounded border p-2.5 backdrop-blur-sm ${className}`}
+      className={`rounded border backdrop-blur-sm ${compact ? "p-2" : "p-2.5"} ${className}`}
       style={{
         borderColor: "rgba(155,89,255,0.28)",
         background: "linear-gradient(180deg, rgba(3,7,18,0.82), rgba(4,10,25,0.72))",
@@ -156,11 +157,11 @@ function usePhoneSensors(active: boolean): PhoneSensors {
   return sensors;
 }
 
-function SpectralRadar({ active, features, progress, sensors }: { active: boolean; features: AudioFeatures | null; progress: number; sensors: PhoneSensors }) {
+function SpectralRadar({ active, features, progress, sensors, compact = false }: { active: boolean; features: AudioFeatures | null; progress: number; sensors: PhoneSensors; compact?: boolean }) {
   const intensity = clamp(progress * 0.45 + n(features?.rms) * 450 + sensors.motion * 0.35 + sensors.rotation * 0.18, 4, 98);
   const blips = useMemo(() => {
     const seed = Math.floor(progress / 8) + Math.round(n(features?.spectralCentroid) / 400);
-    return Array.from({ length: 7 }, (_, i) => {
+    return Array.from({ length: compact ? 5 : 7 }, (_, i) => {
       const angle = ((seed * 37 + i * 53) % 360) * Math.PI / 180;
       const radius = 18 + ((seed * 19 + i * 23) % 54);
       return {
@@ -170,11 +171,11 @@ function SpectralRadar({ active, features, progress, sensors }: { active: boolea
         size: 1.2 + ((i + seed) % 3) * 0.75,
       };
     });
-  }, [features, progress, active]);
+  }, [features, progress, active, compact]);
   const sweep = active ? (progress * 4.2 + Date.now() / 45) % 360 : 35;
 
   return (
-    <div className="relative h-40 overflow-hidden rounded border border-cyan-200/10 bg-cyan-200/[0.015]">
+    <div className={`relative overflow-hidden rounded border border-cyan-200/10 bg-cyan-200/[0.015] ${compact ? "h-28 sm:h-32" : "h-40"}`}>
       <div className="absolute inset-0" style={{ background: "radial-gradient(circle at 50% 50%, rgba(126,232,255,0.11), transparent 58%)" }} />
       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden="true">
         {[38, 27, 16].map(r => <circle key={r} cx="50" cy="50" r={r} fill="none" stroke={CYAN} strokeWidth="0.35" opacity="0.24" />)}
@@ -189,10 +190,10 @@ function SpectralRadar({ active, features, progress, sensors }: { active: boolea
         <circle cx="50" cy="50" r="2" fill={GHOST} opacity="0.55" />
       </svg>
       <div className="absolute left-2 top-2 text-[7px] font-mono uppercase tracking-[0.18em]" style={{ color: CYAN }}>spectral radar</div>
-      <div className="absolute bottom-2 left-2 right-2 grid grid-cols-2 gap-x-3 gap-y-1">
+      <div className={`absolute bottom-2 left-2 right-2 grid gap-x-3 gap-y-1 ${compact ? "grid-cols-2" : "grid-cols-2"}`}>
         <MetricRow label="Rem" value={`${Math.round(intensity)}%`} hot={intensity > 45} />
         <MetricRow label="Mic" value={`${Math.round(clamp(n(features?.rms) * 420))}%`} />
-        <MetricRow label="Motion" value={`${Math.round(sensors.motion)}%`} hot={sensors.motion > 20} />
+        {!compact && <MetricRow label="Motion" value={`${Math.round(sensors.motion)}%`} hot={sensors.motion > 20} />}
         <MetricRow label="Trace" value={active ? "SWEEP" : "IDLE"} />
       </div>
     </div>
@@ -330,25 +331,35 @@ function SlsCamera({ active, features, progress, sensors }: { active: boolean; f
   );
 }
 
-function RealSensorGrid({ sensors, features, active }: { sensors: PhoneSensors; features: AudioFeatures | null; active: boolean }) {
+function RealSensorGrid({ sensors, features, active, compact = false }: { sensors: PhoneSensors; features: AudioFeatures | null; active: boolean; compact?: boolean }) {
   const mic = clamp(n(features?.rms) * 420, 0, 100);
   const flat = clamp(n(features?.flatness, 0.1) * 100, 0, 100);
   const centroid = n(features?.spectralCentroid, 0);
+  const items = [
+    <MetricRow key="mic" label="Mic" value={`${Math.round(mic)}%`} hot={mic > 18} />,
+    <MetricRow key="noise" label="Noise" value={`${Math.round(flat)}%`} hot={flat > 35} />,
+    <MetricRow key="motion" label="Move" value={sensors.permission === "denied" ? "REFUS" : `${Math.round(sensors.motion)}%`} hot={sensors.motion > 18} />,
+    <MetricRow key="state" label="State" value={active ? "LIVE" : "VEILLE"} hot={active} />,
+  ];
   return (
     <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-      <MetricRow label="Mic RMS" value={`${Math.round(mic)}%`} hot={mic > 18} />
-      <MetricRow label="Noise" value={`${Math.round(flat)}%`} hot={flat > 35} />
-      <MetricRow label="Motion" value={sensors.permission === "denied" ? "REFUS" : `${Math.round(sensors.motion)}%`} hot={sensors.motion > 18} />
-      <MetricRow label="Gyro" value={sensors.permission === "unsupported" ? "---" : `${Math.round(sensors.rotation)}%`} hot={sensors.rotation > 18} />
-      <MetricRow label="Tilt" value={`${Math.round(sensors.tilt)}%`} />
-      <MetricRow label="Cent" value={centroid ? `${Math.round(centroid)} Hz` : "---"} />
-      <MetricRow label="State" value={active ? "LIVE" : "VEILLE"} hot={active} />
-      <MetricRow label="Src" value={sensors.available ? "PHONE" : "AUDIO"} />
+      {compact ? items : (
+        <>
+          <MetricRow label="Mic RMS" value={`${Math.round(mic)}%`} hot={mic > 18} />
+          <MetricRow label="Noise" value={`${Math.round(flat)}%`} hot={flat > 35} />
+          <MetricRow label="Motion" value={sensors.permission === "denied" ? "REFUS" : `${Math.round(sensors.motion)}%`} hot={sensors.motion > 18} />
+          <MetricRow label="Gyro" value={sensors.permission === "unsupported" ? "---" : `${Math.round(sensors.rotation)}%`} hot={sensors.rotation > 18} />
+          <MetricRow label="Tilt" value={`${Math.round(sensors.tilt)}%`} />
+          <MetricRow label="Cent" value={centroid ? `${Math.round(centroid)} Hz` : "---"} />
+          <MetricRow label="State" value={active ? "LIVE" : "VEILLE"} hot={active} />
+          <MetricRow label="Src" value={sensors.available ? "PHONE" : "AUDIO"} />
+        </>
+      )}
     </div>
   );
 }
 
-export function SensorScreensV3({ active, audioFeatures, progress, detectedLabel }: SensorScreensV3Props) {
+export function SensorScreensV3({ active, audioFeatures, progress, detectedLabel, compact = false }: SensorScreensV3Props) {
   const sensors = usePhoneSensors(active);
   const [visionOpen, setVisionOpen] = useState(false);
   const centroid = n(audioFeatures?.spectralCentroid, 0);
@@ -356,17 +367,17 @@ export function SensorScreensV3({ active, audioFeatures, progress, detectedLabel
 
   return (
     <>
-      <section className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Panel>
+      <section className={compact ? "grid grid-cols-2 gap-2" : "grid grid-cols-1 gap-2 sm:grid-cols-2"}>
+        <Panel compact={compact}>
           <MiniHeader label="RADAR SPECTRAL" status={active ? "LIVE" : "IDLE"} />
-          <SpectralRadar active={active} features={audioFeatures} progress={progress} sensors={sensors} />
+          <SpectralRadar active={active} features={audioFeatures} progress={progress} sensors={sensors} compact={compact} />
         </Panel>
 
-        <Panel>
-          <MiniHeader label="CAPTEURS TÉLÉPHONE" status={envMode} />
-          <RealSensorGrid sensors={sensors} features={audioFeatures} active={active} />
+        <Panel compact={compact}>
+          <MiniHeader label={compact ? "CAPTEURS" : "CAPTEURS TÉLÉPHONE"} status={envMode} />
+          <RealSensorGrid sensors={sensors} features={audioFeatures} active={active} compact={compact} />
           <div className="mt-2 flex items-center justify-between gap-2 text-[7px] font-mono uppercase tracking-[0.14em]" style={{ color: DIM }}>
-            <span className="truncate">{detectedLabel ? `trace: ${detectedLabel}` : "trace: acquisition faible / attente"}</span>
+            {!compact && <span className="truncate">{detectedLabel ? `trace: ${detectedLabel}` : "trace: acquisition faible / attente"}</span>}
             <button type="button" onClick={() => setVisionOpen(true)} className="shrink-0 rounded border px-2 py-1 tracking-[0.16em]" style={{ borderColor: "rgba(155,89,255,0.36)", color: GHOST, background: "rgba(155,89,255,0.08)" }}>
               vision SLS
             </button>
