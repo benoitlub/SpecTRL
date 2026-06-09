@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { AudioFeatures } from "../data/animals";
 
 type WebKitWindow = Window & typeof globalThis & {
   webkitAudioContext?: typeof AudioContext;
@@ -14,11 +15,15 @@ function readSoundMode(): SoundMode {
 
 function soundScale(mode: SoundMode) {
   if (mode === "off") return 0;
-  if (mode === "low") return 0.38;
-  return 1;
+  if (mode === "low") return 0.65;
+  return 1.55;
 }
 
-export function useSpectralBeeps(active: boolean, progress: number, complete: boolean) {
+function clamp(value: number, min = 0, max = 1) {
+  return Math.max(min, Math.min(max, value));
+}
+
+export function useSpectralBeeps(active: boolean, progress: number, complete: boolean, audioFeatures?: AudioFeatures | null) {
   const ctxRef = useRef<AudioContext | null>(null);
   const masterRef = useRef<GainNode | null>(null);
   const humRef = useRef<OscillatorNode | null>(null);
@@ -33,7 +38,12 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
   const subGainRef = useRef<GainNode | null>(null);
   const shimmerGainRef = useRef<GainNode | null>(null);
   const timerRef = useRef<number | null>(null);
+  const featuresRef = useRef<AudioFeatures | null>(audioFeatures || null);
   const [mode, setMode] = useState<SoundMode>(() => readSoundMode());
+
+  useEffect(() => {
+    featuresRef.current = audioFeatures || null;
+  }, [audioFeatures]);
 
   useEffect(() => {
     const sync = () => setMode(readSoundMode());
@@ -47,6 +57,18 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
 
   useEffect(() => {
     const scale = soundScale(mode);
+
+    const micEnergy = () => {
+      const f = featuresRef.current;
+      if (!f) return 0.18;
+      return clamp(f.rms * 9 + f.flatness * 0.38 + f.lowEnergyRatio * 0.12);
+    };
+
+    const spectralBias = () => {
+      const f = featuresRef.current;
+      if (!f) return 0.35;
+      return clamp(f.spectralCentroid / 4200 + f.zcr * 0.75);
+    };
 
     const stopTimer = () => {
       if (timerRef.current) window.clearInterval(timerRef.current);
@@ -89,7 +111,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       if (!AudioCtor) return null;
       const ctx = new AudioCtor();
       const master = ctx.createGain();
-      master.gain.value = 0.16 * scale;
+      master.gain.value = 0.24 * scale;
       master.connect(ctx.destination);
       ctxRef.current = ctx;
       masterRef.current = master;
@@ -100,7 +122,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const ctx = ctxRef.current;
       const master = masterRef.current;
       if (!ctx || !master) return;
-      master.gain.setTargetAtTime(0.16 * scale, ctx.currentTime, 0.08);
+      master.gain.setTargetAtTime(0.24 * scale * (1 + micEnergy() * 0.22), ctx.currentTime, 0.08);
     };
 
     const createRadioNoiseBuffer = (ctx: AudioContext) => {
@@ -110,10 +132,10 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       let previous = 0;
       for (let i = 0; i < length; i++) {
         const white = Math.random() * 2 - 1;
-        previous = previous * 0.86 + white * 0.14;
-        const crackle = Math.random() > 0.985 ? (Math.random() * 2 - 1) * 0.95 : 0;
-        const tuningWarble = Math.sin(i * 0.004 + Math.sin(i * 0.0009) * 5) * 0.08;
-        data[i] = Math.max(-1, Math.min(1, previous * 0.72 + white * 0.24 + crackle + tuningWarble));
+        previous = previous * 0.84 + white * 0.16;
+        const crackle = Math.random() > 0.977 ? (Math.random() * 2 - 1) * 1.15 : 0;
+        const tuningWarble = Math.sin(i * 0.004 + Math.sin(i * 0.0009) * 5) * 0.10;
+        data[i] = Math.max(-1, Math.min(1, previous * 0.76 + white * 0.28 + crackle + tuningWarble));
       }
       return buffer;
     };
@@ -136,7 +158,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       notch.type = "notch";
       notch.frequency.value = 1240;
       notch.Q.value = 6.5;
-      gain.gain.value = 0.034 * scale;
+      gain.gain.value = 0.06 * scale;
       noise.connect(filter);
       filter.connect(notch);
       notch.connect(gain);
@@ -148,7 +170,7 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const needleFilter = ctx.createBiquadFilter();
       needle.type = "sawtooth";
       needle.frequency.value = 83;
-      needleGain.gain.value = 0.006 * scale;
+      needleGain.gain.value = 0.014 * scale;
       needleFilter.type = "bandpass";
       needleFilter.frequency.value = 1660;
       needleFilter.Q.value = 12;
@@ -168,11 +190,14 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const ctx = ctxRef.current;
       if (!ctx || !radioFilterRef.current || !radioGainRef.current || scale <= 0) return;
       const now = ctx.currentTime;
-      const freq = 420 + Math.random() * 1850 + Math.sin(progress * 0.09) * 180;
-      const volume = (0.018 + Math.random() * 0.042 + progress / 4200) * scale;
-      radioFilterRef.current.frequency.setTargetAtTime(freq, now, 0.16);
-      radioFilterRef.current.Q.setTargetAtTime(0.7 + Math.random() * 6.8, now, 0.18);
-      radioGainRef.current.gain.setTargetAtTime(volume, now, 0.12);
+      const energy = micEnergy();
+      const centroid = spectralBias();
+      const freq = 360 + centroid * 2300 + Math.random() * 880 + Math.sin(progress * 0.09) * 220;
+      const volume = (0.05 + Math.random() * 0.07 + energy * 0.09 + progress / 3300) * scale;
+      radioFilterRef.current.frequency.setTargetAtTime(freq, now, 0.12);
+      radioFilterRef.current.Q.setTargetAtTime(1.1 + energy * 9.2 + Math.random() * 6.2, now, 0.14);
+      radioGainRef.current.gain.setTargetAtTime(volume, now, 0.08);
+      if (radioNeedleGainRef.current) radioNeedleGainRef.current.gain.setTargetAtTime((0.012 + energy * 0.018) * scale, now, 0.12);
     };
 
     const playTone = (frequency: number, duration = 0.08, volume = 0.08, type: OscillatorType = "sine") => {
@@ -189,9 +214,9 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       osc.frequency.setValueAtTime(frequency, now);
       filter.type = "bandpass";
       filter.frequency.setValueAtTime(frequency * 1.25, now);
-      filter.Q.value = 5.8;
+      filter.Q.value = 5.8 + spectralBias() * 3;
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(volume * scale, now + 0.016);
+      gain.gain.exponentialRampToValueAtTime(volume * scale * (1 + micEnergy() * 0.45), now + 0.016);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
       osc.connect(filter);
       filter.connect(gain);
@@ -205,21 +230,22 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const ctx = ensureContext();
       const master = masterRef.current;
       if (!ctx || !master) return;
-      const length = Math.floor(ctx.sampleRate * (dark ? 0.28 : 0.105));
+      const energy = micEnergy();
+      const length = Math.floor(ctx.sampleRate * (dark ? 0.32 + energy * 0.12 : 0.12));
       const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < data.length; i++) {
-        const fade = Math.pow(1 - i / data.length, dark ? 1.7 : 2);
-        const burst = Math.random() > 0.955 ? (Math.random() * 2 - 1) * 1.2 : 0;
-        data[i] = ((Math.random() * 2 - 1) * fade + burst) * (dark ? 0.82 : 0.55);
+        const fade = Math.pow(1 - i / data.length, dark ? 1.45 : 1.8);
+        const burst = Math.random() > 0.94 - energy * 0.04 ? (Math.random() * 2 - 1) * 1.35 : 0;
+        data[i] = ((Math.random() * 2 - 1) * fade + burst) * (dark ? 0.95 : 0.68);
       }
       const source = ctx.createBufferSource();
       const gain = ctx.createGain();
       const filter = ctx.createBiquadFilter();
       filter.type = dark ? "bandpass" : "highpass";
-      filter.frequency.value = dark ? 650 + Math.random() * 1100 : 1900 + Math.random() * 2400;
-      filter.Q.value = dark ? 7.2 : 2.4;
-      gain.gain.value = (dark ? 0.095 : 0.055) * scale;
+      filter.frequency.value = dark ? 520 + spectralBias() * 1700 : 1900 + spectralBias() * 3200;
+      filter.Q.value = dark ? 8.5 : 3.2;
+      gain.gain.value = (dark ? 0.145 : 0.082) * scale * (1 + energy * 0.5);
       source.buffer = buffer;
       source.connect(filter);
       filter.connect(gain);
@@ -237,11 +263,11 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const filter = ctx.createBiquadFilter();
       const now = ctx.currentTime;
       osc.type = "sine";
-      osc.frequency.setValueAtTime(34 + Math.random() * 18, now);
+      osc.frequency.setValueAtTime(32 + micEnergy() * 32 + Math.random() * 18, now);
       filter.type = "lowpass";
-      filter.frequency.value = 160;
+      filter.frequency.value = 180 + spectralBias() * 220;
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.075 * scale, now + 0.045);
+      gain.gain.exponentialRampToValueAtTime(0.105 * scale * (1 + micEnergy() * 0.35), now + 0.04);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
       osc.connect(filter);
       filter.connect(gain);
@@ -264,10 +290,10 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const humGain = ctx.createGain();
       const humFilter = ctx.createBiquadFilter();
       hum.type = "triangle";
-      hum.frequency.value = 44;
-      humGain.gain.value = 0.019 * scale;
+      hum.frequency.value = 43;
+      humGain.gain.value = 0.031 * scale;
       humFilter.type = "lowpass";
-      humFilter.frequency.value = 280;
+      humFilter.frequency.value = 310;
       hum.connect(humFilter);
       humFilter.connect(humGain);
       humGain.connect(master);
@@ -277,10 +303,10 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const subGain = ctx.createGain();
       const subFilter = ctx.createBiquadFilter();
       sub.type = "sine";
-      sub.frequency.value = 27;
-      subGain.gain.value = 0.015 * scale;
+      sub.frequency.value = 26;
+      subGain.gain.value = 0.026 * scale;
       subFilter.type = "lowpass";
-      subFilter.frequency.value = 90;
+      subFilter.frequency.value = 100;
       sub.connect(subFilter);
       subFilter.connect(subGain);
       subGain.connect(master);
@@ -291,9 +317,9 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       const shimmerFilter = ctx.createBiquadFilter();
       shimmer.type = "sawtooth";
       shimmer.frequency.value = 118;
-      shimmerGain.gain.value = 0.006 * scale;
+      shimmerGain.gain.value = 0.012 * scale;
       shimmerFilter.type = "bandpass";
-      shimmerFilter.frequency.value = 720;
+      shimmerFilter.frequency.value = 780;
       shimmerFilter.Q.value = 11;
       shimmer.connect(shimmerFilter);
       shimmerFilter.connect(shimmerGain);
@@ -318,19 +344,21 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       startHum();
       wobbleRadio();
       stopTimer();
-      playTone(96, 0.11, 0.045, "triangle");
+      playTone(96 + micEnergy() * 90, 0.12, 0.072, "triangle");
       playAirCrackle(true);
-      const interval = Math.max(300, 890 - progress * 5.2);
+      const interval = Math.max(220, 780 - progress * 4.8 - micEnergy() * 160);
       timerRef.current = window.setInterval(() => {
+        updateMaster();
         wobbleRadio();
-        const base = 180 + progress * 3.6;
-        const offset = Math.random() > 0.68 ? 410 : Math.random() > 0.52 ? 190 : 0;
-        const freq = base + offset + Math.random() * 190;
+        const energy = micEnergy();
+        const base = 160 + progress * 3.4 + spectralBias() * 210;
+        const offset = Math.random() > 0.64 ? 470 : Math.random() > 0.48 ? 210 : 0;
+        const freq = base + offset + Math.random() * (210 + energy * 240);
         const type: OscillatorType = Math.random() > 0.58 ? "triangle" : "sine";
-        playTone(freq, 0.055 + Math.random() * 0.085, 0.028 + progress / 4600, type);
-        if (Math.random() > 0.70) playTone(freq * 1.71, 0.045, 0.025, "sine");
-        if (Math.random() > 0.46) playAirCrackle(Math.random() > 0.22);
-        if (Math.random() > 0.77) playPulse();
+        playTone(freq, 0.06 + Math.random() * 0.095, 0.045 + progress / 3600 + energy * 0.035, type);
+        if (Math.random() > 0.65) playTone(freq * 1.71, 0.05, 0.038 + energy * 0.018, "sine");
+        if (Math.random() > 0.36 - energy * 0.18) playAirCrackle(Math.random() > 0.18);
+        if (Math.random() > 0.72 - energy * 0.14) playPulse();
       }, interval);
     } else {
       stopTimer();
