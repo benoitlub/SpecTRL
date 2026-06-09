@@ -34,9 +34,9 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
 
 function Footer() {
   return (
-    <footer className="relative z-10 mx-auto max-w-5xl px-3 pb-28 pt-4">
+    <footer className="relative z-10 mx-auto max-w-5xl px-3 pb-44 pt-4">
       <div className="rounded-xl border border-cyan-300/15 bg-slate-950/70 px-3 py-2 text-center text-[8px] font-mono uppercase tracking-[0.22em] text-cyan-100/50">
-        Feuch Institute // SpecTRL v0.2.1 RESTORED // Journal local
+        Feuch Institute // SpecTRL v0.2.1 RESTORED // Journal local // partage + appel Marty
       </div>
     </footer>
   );
@@ -66,27 +66,28 @@ export default function Home() {
   }, [state.isListening]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#01040c] text-slate-100">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#01040c] text-slate-100">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(0,212,255,0.14),transparent_32%),radial-gradient(circle_at_85%_10%,rgba(155,89,255,0.16),transparent_34%)]" />
       <Header lang={lang} setLang={setLang} />
 
-      <main className="relative z-10 mx-auto max-w-5xl space-y-3 px-3 py-3">
+      <main className="relative z-10 mx-auto max-w-5xl space-y-3 px-3 py-3 pb-44">
         {micPermission === "denied" && <div className="rounded border border-red-300/30 bg-red-500/10 px-3 py-2 text-[10px] font-mono uppercase tracking-wider text-red-200">Micro refusé ou indisponible.</div>}
 
-        <section className="grid grid-cols-1 gap-3 lg:grid-cols-[0.85fr_1.15fr]">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[0.85fr_1.15fr]">
           <SpeciesPanel state={state} lang={lang} />
           <SensorScreensV3 active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
-        </section>
+        </div>
 
-        <section className="grid grid-cols-1 gap-3 lg:grid-cols-[0.85fr_1.2fr_0.95fr]">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[0.85fr_1.2fr_0.95fr]">
           <SignalQualityPanel state={state} scanProgress={state.scanProgress} lang={lang} />
           <TranslationCard state={state} lang={lang} />
           <NeuralPanel state={state} lang={lang} />
-        </section>
+        </div>
 
-        <section>
+        <div className="rounded-2xl border border-purple-300/20 bg-slate-950/60 p-2">
+          <div className="px-2 pb-2 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-200/70">Journal spectral // partage // appel aux dons</div>
           <SpectralJournal latestEntry={latestEntry} />
-        </section>
+        </div>
       </main>
 
       <MicButton isListening={state.isListening} isAnalyzing={state.isAnalyzing} isComplete={state.isComplete} onStart={startListening} onStop={stopListening} onReset={reset} lang={lang} signalQuality={state.signalQuality || state.scanProgress} habitat={state.environmentalScan || "TRACE"} />
