@@ -43,19 +43,19 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
 
 function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }) {
   return (
-    <header className="relative z-10 px-3 pt-3">
-      <div className="mx-auto max-w-5xl rounded-2xl border border-cyan-300/25 bg-slate-950/85 px-4 py-3 shadow-[0_0_30px_rgba(0,212,255,0.10)]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex flex-wrap items-baseline gap-3">
-              <h1 className="font-mono text-2xl font-black uppercase tracking-[0.22em] text-cyan-200 sm:text-3xl">SpecTRL</h1>
-              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v1.1 COMPACT SILENCE</span>
+    <header className="relative z-10 px-2 pt-2">
+      <div className="mx-auto max-w-5xl rounded-xl border border-cyan-300/20 bg-slate-950/82 px-3 py-2 shadow-[0_0_22px_rgba(0,212,255,0.08)]">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-baseline gap-2">
+              <h1 className="font-mono text-xl font-black tracking-[0.10em] text-cyan-200 sm:text-2xl">SpecTRL</h1>
+              <span className="rounded border border-purple-300/25 px-1.5 py-0.5 text-[7px] font-mono uppercase tracking-[0.18em] text-purple-100/75">v1.1</span>
             </div>
-            <div className="mt-1 text-[9px] font-mono uppercase tracking-[0.30em] text-orange-300/70">Feuch Institute // Marty trace resonance logger</div>
+            <div className="mt-0.5 truncate text-[7px] font-mono uppercase tracking-[0.20em] text-orange-300/62 sm:text-[8px]">Feuch Institute // Marty logger</div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1">
             {(["fr", "en", "es"] as Lang[]).map(item => (
-              <button key={item} type="button" onClick={() => setLang(item)} className="rounded border px-2 py-1 text-[9px] font-mono uppercase tracking-widest" style={{ borderColor: lang === item ? "#00d4ff" : "#ffffff22", color: lang === item ? "#7ee8ff" : "#ffffff66" }}>{item}</button>
+              <button key={item} type="button" onClick={() => setLang(item)} className="rounded border px-1.5 py-0.5 text-[7px] font-mono uppercase tracking-widest" style={{ borderColor: lang === item ? "#00d4ff" : "#ffffff22", color: lang === item ? "#7ee8ff" : "#ffffff66" }}>{item}</button>
             ))}
           </div>
         </div>
