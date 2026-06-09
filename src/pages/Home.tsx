@@ -19,7 +19,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Journal",
     support: "Soutenir",
     journalTitle: "Journal spectral compact",
-    footer: "Feuch Institute // SpecTRL v0.7 RADAR RIGHT // radar première ligne // traduction dessous",
+    footer: "Feuch Institute // SpecTRL v0.8 SLS CAMERA // radar seul // SLS caméra réel",
   },
   en: {
     actions: "Actions",
@@ -28,7 +28,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Journal",
     support: "Support",
     journalTitle: "Compact spectral journal",
-    footer: "Feuch Institute // SpecTRL v0.7 RADAR RIGHT // first-row radar // translation below",
+    footer: "Feuch Institute // SpecTRL v0.8 SLS CAMERA // radar only // real camera SLS",
   },
   es: {
     actions: "Acciones",
@@ -37,7 +37,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Diario",
     support: "Apoyar",
     journalTitle: "Diario espectral compacto",
-    footer: "Feuch Institute // SpecTRL v0.7 RADAR RIGHT // radar primera línea // traducción debajo",
+    footer: "Feuch Institute // SpecTRL v0.8 SLS CAMERA // solo radar // SLS cámara real",
   },
 };
 
@@ -49,7 +49,7 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
           <div>
             <div className="flex flex-wrap items-baseline gap-3">
               <h1 className="font-mono text-2xl font-black uppercase tracking-[0.22em] text-cyan-200 sm:text-3xl">SpecTRL</h1>
-              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.7 RADAR RIGHT</span>
+              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.8 SLS CAMERA</span>
             </div>
             <div className="mt-1 text-[9px] font-mono uppercase tracking-[0.30em] text-orange-300/70">Feuch Institute // Marty trace resonance logger</div>
           </div>
@@ -153,7 +153,7 @@ export default function Home() {
 
         <div className="grid grid-cols-[0.92fr_1.08fr] items-start gap-2 sm:gap-3 lg:grid-cols-[0.9fr_1.1fr]">
           <SpeciesPanel state={state} lang={lang} />
-          <SensorScreensV3 compact active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
+          <SensorScreensV3 radarOnly compact active={active} audioFeatures={audioFeatures || state.audioFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
         </div>
 
         <div className="space-y-3">
