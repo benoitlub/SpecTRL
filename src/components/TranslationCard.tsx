@@ -29,9 +29,9 @@ const ANALYSIS_STEPS: Record<Lang, string[]> = {
 };
 
 const LIVE_LABEL: Record<Lang, string> = {
-  fr: "FRAGMENTS CAPTÉS // RECONSTRUCTION EN ATTENTE",
-  en: "CAPTURED FRAGMENTS // RECONSTRUCTION PENDING",
-  es: "FRAGMENTOS CAPTADOS // RECONSTRUCCIÓN PENDIENTE",
+  fr: "MOTS CAPTÉS DANS L'AIR // RECONSTRUCTION EN ATTENTE",
+  en: "WORDS CAUGHT IN THE AIR // RECONSTRUCTION PENDING",
+  es: "PALABRAS CAPTADAS EN EL AIRE // RECONSTRUCCIÓN PENDIENTE",
 };
 
 const EMPTY_LABEL: Record<Lang, string> = {
@@ -47,7 +47,7 @@ function buildFragments(text: string, lang: Lang) {
     .trim();
 
   const stopWords: Record<Lang, Set<string>> = {
-    fr: new Set(["avec", "dans", "pour", "mais", "donc", "quand", "comme", "cette", "être", "avait", "avais", "plus", "moins", "très", "près", "tout", "tous", "toute", "leurs", "leur", "sans", "sous", "chez", "elle", "elles", "nous", "vous", "ils", "des", "les", "une", "que", "qui", "pas", "non"]),
+    fr: new Set(["avec", "dans", "pour", "mais", "donc", "quand", "comme", "cette", "être", "avait", "avais", "plus", "moins", "très", "près", "tout", "tous", "toute", "leurs", "leur", "sans", "sous", "chez", "elle", "elles", "nous", "vous", "ils", "des", "les", "une", "que", "qui", "pas", "non", "j'ai", "c'est"]),
     en: new Set(["with", "that", "this", "there", "their", "they", "them", "from", "were", "where", "what", "when", "have", "should", "would", "could", "only", "just", "very", "into", "near", "here"]),
     es: new Set(["con", "para", "pero", "como", "esta", "este", "todo", "todos", "muy", "más", "menos", "donde", "cuando", "porque", "aquí", "ellas", "ellos", "una", "unos", "que", "por"]),
   };
@@ -59,23 +59,24 @@ function buildFragments(text: string, lang: Lang) {
     .filter(word => !stopWords[lang].has(word.toLowerCase()));
 
   const unique = Array.from(new Set(words));
-  const fragments = unique.slice(0, 7);
+  const fragments = unique.slice(0, 9);
 
   if (fragments.length >= 3) return fragments;
 
   const fallbacks: Record<Lang, string[]> = {
-    fr: ["couloir", "pluie", "fenêtre", "bol", "attente"],
-    en: ["hallway", "rain", "window", "bowl", "waiting"],
-    es: ["pasillo", "lluvia", "ventana", "cuenco", "espera"],
+    fr: ["couloir", "pluie", "fenêtre", "bol", "attente", "tiroir"],
+    en: ["hallway", "rain", "window", "bowl", "waiting", "drawer"],
+    es: ["pasillo", "lluvia", "ventana", "cuenco", "espera", "cajón"],
   };
 
-  return Array.from(new Set([...fragments, ...fallbacks[lang]])).slice(0, 6);
+  return Array.from(new Set([...fragments, ...fallbacks[lang]])).slice(0, 7);
 }
 
 export function TranslationCard({ state, lang }: { state: AnalysisState; lang: Lang }) {
   const t = UI_LABELS[lang];
   const [displayed, setDisplayed] = useState("");
   const [cursor, setCursor] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(0);
   const steps = ANALYSIS_STEPS[lang];
   const hasTranslation = Boolean(state.translation);
   const isLive = state.isListening && hasTranslation;
@@ -87,6 +88,23 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
   }, [state.isAnalyzing, state.isListening, state.scanProgress, steps.length]);
 
   const fragments = useMemo(() => buildFragments(state.translation, lang), [state.translation, lang]);
+
+  useEffect(() => {
+    if (!isLive || fragments.length === 0) {
+      setVisibleCount(0);
+      return;
+    }
+
+    setVisibleCount(0);
+    let index = 0;
+    const interval = window.setInterval(() => {
+      index += 1;
+      setVisibleCount(Math.min(index, fragments.length));
+      if (index >= fragments.length) window.clearInterval(interval);
+    }, 460);
+
+    return () => window.clearInterval(interval);
+  }, [isLive, fragments.join("|")]);
 
   useEffect(() => {
     if (!hasTranslation || state.isListening || !state.isComplete) {
@@ -106,8 +124,8 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
         } else if (interval) {
           clearInterval(interval);
         }
-      }, 38);
-    }, 300);
+      }, 34);
+    }, 220);
 
     return () => {
       clearTimeout(delay);
@@ -123,6 +141,7 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
   const accentColor = state.isPoetic ? "#9b59ff" : isLive ? "#8f72ff" : "#00d4ff";
   const labelText = isLive ? LIVE_LABEL[lang] : state.isPoetic ? t.poetry : t.translation;
   const borderActive = isFinal || isLive;
+  const visibleFragments = fragments.slice(0, visibleCount);
 
   return (
     <div
@@ -211,15 +230,17 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
             {EMPTY_LABEL[lang]}
           </div>
           <div className="flex flex-wrap gap-2">
-            {fragments.map((fragment, index) => (
+            {visibleFragments.map((fragment, index) => (
               <span
                 key={`${fragment}-${index}`}
-                className="rounded border px-2 py-1 font-mono text-[11px] tracking-[0.12em] lowercase"
+                className="rounded border px-2 py-1 font-mono text-[12px] tracking-[0.12em] lowercase transition-all duration-500"
                 style={{
                   color: index % 3 === 0 ? "#cbb7ff" : index % 3 === 1 ? "#9ecfff" : "#c8b28a",
                   borderColor: index % 3 === 0 ? "#9b59ff33" : index % 3 === 1 ? "#00d4ff22" : "#ff8c0022",
                   background: "rgba(255,255,255,0.025)",
                   opacity: 0.62 + Math.min(0.28, state.scanProgress / 260),
+                  transform: "translateY(0)",
+                  boxShadow: "0 0 12px rgba(155,89,255,0.08)",
                 }}
               >
                 {fragment}
@@ -265,7 +286,7 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
           )}
           <span className="text-[8px] font-mono text-gray-600 tracking-wider">{t.confidence}: {state.confidence}%</span>
           <span className="text-[8px] font-mono text-gray-600 tracking-wider ml-auto">
-            {isLive ? "FRAGMENTS" : t.institute + " // SPEC-TRL"}
+            {isLive ? "MOTS EN SUSPENSION" : t.institute + " // SPEC-TRL"}
           </span>
         </div>
       )}
