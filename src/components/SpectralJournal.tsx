@@ -9,7 +9,8 @@ import {
 } from "../utils/spectralJournal";
 
 const APP_URL = "https://benoitlub.github.io/SpecTRL/";
-const PAYPAL_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=benoitlubert@gmail.com&currency_code=EUR&item_name=Support+SpecTRL";
+const SUPPORT_EMAIL = ["benoitlubert", "gmail.com"].join("@");
+const SUPPORT_URL = `https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=${encodeURIComponent(SUPPORT_EMAIL)}&currency_code=EUR&item_name=Support+SpecTRL`;
 const LAB_LINE = "Aucune entité n’a été rémunérée pendant cette manifestation. Marty Labs accepte les dons en piles, en silence ou en Wi-Fi stable.";
 const SHARE_CTA_TEXT = "Scanne toi aussi les tyrans du courant d’air :";
 const SHARE_CTA = `${SHARE_CTA_TEXT}\n${APP_URL}`;
@@ -31,6 +32,25 @@ function Metric({ label, value, suffix = "" }: { label: string; value?: number; 
   );
 }
 
+function JournalButton({ tone = "purple", children, onClick }: { tone?: "cyan" | "purple" | "orange" | "red"; children: React.ReactNode; onClick: () => void }) {
+  const palette = {
+    cyan: { border: "rgba(126,232,255,0.38)", color: "#ddf8ff", bg: "linear-gradient(180deg, rgba(0,212,255,0.16), rgba(0,212,255,0.06))", glow: "rgba(0,212,255,0.14)" },
+    purple: { border: "rgba(155,89,255,0.42)", color: "#f0e5ff", bg: "linear-gradient(180deg, rgba(155,89,255,0.18), rgba(155,89,255,0.07))", glow: "rgba(155,89,255,0.16)" },
+    orange: { border: "rgba(255,174,92,0.42)", color: "#ffe5ca", bg: "linear-gradient(180deg, rgba(255,140,0,0.18), rgba(255,140,0,0.07))", glow: "rgba(255,140,0,0.14)" },
+    red: { border: "rgba(255,90,120,0.36)", color: "#ffd7df", bg: "linear-gradient(180deg, rgba(255,60,90,0.14), rgba(255,60,90,0.05))", glow: "rgba(255,60,90,0.10)" },
+  }[tone];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-lg border px-3 py-1.5 text-[8px] font-mono uppercase tracking-[0.15em] transition-transform active:scale-[0.98]"
+      style={{ borderColor: palette.border, color: palette.color, background: palette.bg, boxShadow: `0 0 14px ${palette.glow}, inset 0 0 8px rgba(255,255,255,0.03)` }}
+    >
+      {children}
+    </button>
+  );
+}
+
 function buildShareText(entry: SpectralJournalEntry, includeUrl = true) {
   const place = entry.locationNote || entry.habitat || "rémanence non localisée";
   return [
@@ -47,17 +67,19 @@ function buildShareText(entry: SpectralJournalEntry, includeUrl = true) {
 }
 
 export function SpectralJournal({ latestEntry, compact = false }: { latestEntry: SpectralJournalEntry | null; compact?: boolean }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [entries, setEntries] = useState<SpectralJournalEntry[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [shareStatus, setShareStatus] = useState("");
 
   useEffect(() => {
-    setEntries(getSpectralJournal());
-  }, [latestEntry]);
+    const next = getSpectralJournal();
+    setEntries(next);
+    if (!selectedId && next[0]) setSelectedId(next[0].id);
+  }, [latestEntry, selectedId]);
 
   const selected = useMemo(() => entries.find(entry => entry.id === selectedId) || entries[0] || null, [entries, selectedId]);
-  const visibleEntries = compact ? entries.slice(0, 5) : entries;
+  const visibleEntries = compact ? entries.slice(0, 4) : entries;
 
   const updateSelected = (patch: Partial<SpectralJournalEntry>) => {
     if (!selected) return;
@@ -103,15 +125,15 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
   };
 
   const donate = () => {
-    window.open(PAYPAL_URL, "_blank", "noopener,noreferrer");
+    window.open(SUPPORT_URL, "_blank", "noopener,noreferrer");
   };
 
   const copyLabLine = async () => {
     try {
-      await navigator.clipboard.writeText(`${LAB_LINE}\n\n${SHARE_CTA}\n\nDon PayPal : benoitlubert@gmail.com`);
-      setShareStatus("Appel Marty copié avec le lien et le PayPal.");
+      await navigator.clipboard.writeText(`${LAB_LINE}\n\n${SHARE_CTA}\n\nSoutien : ${SUPPORT_EMAIL}`);
+      setShareStatus("Appel Marty copié avec le lien et le soutien.");
     } catch {
-      setShareStatus(`${LAB_LINE}\n\n${SHARE_CTA}\n\nPayPal : benoitlubert@gmail.com`);
+      setShareStatus(`${LAB_LINE}\n\n${SHARE_CTA}\n\nSoutien : ${SUPPORT_EMAIL}`);
     }
   };
 
@@ -124,24 +146,29 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
   };
 
   return (
-    <div className="rounded border p-2 backdrop-blur-sm" style={{ borderColor: "#9b59ff30", background: "rgba(7,5,22,0.66)", boxShadow: "inset 0 0 16px rgba(155,89,255,0.06)" }}>
-      <button type="button" onClick={() => setOpen(o => !o)} className="w-full flex items-center justify-between gap-2 text-left">
-        <span className="text-[9px] font-mono tracking-[0.32em] uppercase text-purple-300/85">Journal des traces spectrales</span>
-        <span className="text-[8px] font-mono tracking-wider text-gray-500">
-          {entries.length} trace{entries.length > 1 ? "s" : ""} // {open ? "fermer" : "ouvrir"}
-        </span>
-      </button>
+    <div className="rounded border p-2 backdrop-blur-sm" style={{ borderColor: "#9b59ff36", background: "rgba(7,5,22,0.72)", boxShadow: "inset 0 0 16px rgba(155,89,255,0.08)" }}>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <button type="button" onClick={() => setOpen(o => !o)} className="text-left">
+          <span className="block text-[9px] font-mono tracking-[0.32em] uppercase text-purple-300/90">Journal des traces spectrales</span>
+          <span className="block text-[8px] font-mono tracking-wider text-gray-500">{entries.length} trace{entries.length > 1 ? "s" : ""} // {open ? "fermer" : "ouvrir"}</span>
+        </button>
+        <div className="flex flex-wrap gap-2">
+          <JournalButton tone="cyan" onClick={shareSelected}>Partager</JournalButton>
+          <JournalButton tone="orange" onClick={donate}>Soutenir</JournalButton>
+          <JournalButton tone="purple" onClick={copyLabLine}>Copier</JournalButton>
+        </div>
+      </div>
 
       {latestEntry && !open && (
         <div className="mt-2 flex items-center justify-between gap-2 text-[8px] font-mono text-green-300/70 tracking-wider">
           <span className="truncate">Dernière rémanence : {latestEntry.signatureName} — {latestEntry.confidence}%</span>
-          <button type="button" onClick={saveAgain} className="text-purple-200/80 uppercase tracking-wider">archiver</button>
+          <JournalButton tone="purple" onClick={saveAgain}>Archiver</JournalButton>
         </div>
       )}
 
       {open && (
-        <div className="mt-3 grid grid-cols-1 gap-3">
-          <div className="space-y-1 max-h-44 overflow-auto pr-1">
+        <div className="grid grid-cols-1 gap-2">
+          <div className="space-y-1 max-h-36 overflow-auto pr-1">
             {entries.length === 0 && (
               <div className="text-[9px] font-mono text-gray-600 tracking-wider border rounded p-2" style={{ borderColor: "#ffffff11" }}>
                 Aucune rémanence archivée. Appuie sur STOP après un scan pour capturer une trace Marty.
@@ -152,10 +179,11 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
                 key={entry.id}
                 type="button"
                 onClick={() => setSelectedId(entry.id)}
-                className="w-full text-left rounded border px-2 py-1.5 transition-all"
+                className="w-full rounded-lg border px-2.5 py-2 text-left transition-all active:scale-[0.99]"
                 style={{
-                  borderColor: selected?.id === entry.id ? "#9b59ff66" : "#ffffff11",
-                  background: selected?.id === entry.id ? "rgba(155,89,255,0.08)" : "rgba(255,255,255,0.02)",
+                  borderColor: selected?.id === entry.id ? "#9b59ff72" : "#ffffff13",
+                  background: selected?.id === entry.id ? "rgba(155,89,255,0.10)" : "rgba(255,255,255,0.025)",
+                  boxShadow: selected?.id === entry.id ? "0 0 14px rgba(155,89,255,0.12)" : "none",
                 }}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -168,17 +196,13 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
           </div>
 
           {selected && (
-            <div className="rounded border p-2 space-y-2" style={{ borderColor: "#ffffff12", background: "rgba(2,8,20,0.6)" }}>
+            <div className="rounded border p-2 space-y-2" style={{ borderColor: "#ffffff14", background: "rgba(2,8,20,0.62)" }}>
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="text-sm font-mono font-bold text-white tracking-wider">{selected.signatureName}</div>
-                  <div className="text-[8px] font-mono text-gray-500 tracking-wider">
-                    {formatDate(selected.createdAt)} // {selected.habitat}
-                  </div>
+                  <div className="text-[8px] font-mono text-gray-500 tracking-wider">{formatDate(selected.createdAt)} // {selected.habitat}</div>
                 </div>
-                <button type="button" onClick={() => updateSelected({ favorite: !selected.favorite })} className="text-lg leading-none" title="Favori">
-                  {selected.favorite ? "★" : "☆"}
-                </button>
+                <JournalButton tone="purple" onClick={() => updateSelected({ favorite: !selected.favorite })}>{selected.favorite ? "★" : "☆"}</JournalButton>
               </div>
 
               <div className="rounded border p-2 text-[11px] font-mono leading-relaxed text-purple-50/90 whitespace-pre-line" style={{ borderColor: "#9b59ff28" }}>
@@ -197,24 +221,12 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
 
                   <label className="block space-y-1">
                     <span className="text-[8px] font-mono text-gray-500 tracking-wider uppercase">Lieu / contexte</span>
-                    <input
-                      value={selected.locationNote}
-                      onChange={event => updateSelected({ locationNote: event.target.value })}
-                      placeholder="Salon, couloir, cuisine, grenier, rideau vexé..."
-                      className="w-full rounded border bg-transparent px-2 py-1 text-[10px] font-mono text-gray-200 outline-none"
-                      style={{ borderColor: "#ffffff18" }}
-                    />
+                    <input value={selected.locationNote} onChange={event => updateSelected({ locationNote: event.target.value })} placeholder="Salon, couloir, cuisine, grenier, rideau vexé..." className="w-full rounded border bg-transparent px-2 py-1 text-[10px] font-mono text-gray-200 outline-none" style={{ borderColor: "#ffffff18" }} />
                   </label>
 
                   <label className="block space-y-1">
                     <span className="text-[8px] font-mono text-gray-500 tracking-wider uppercase">Notes</span>
-                    <textarea
-                      value={selected.userNotes}
-                      onChange={event => updateSelected({ userNotes: event.target.value })}
-                      placeholder="Ex : rideau immobile mais arrogant, box suspecte, café tiède..."
-                      className="w-full min-h-16 rounded border bg-transparent px-2 py-1 text-[10px] font-mono text-gray-200 outline-none"
-                      style={{ borderColor: "#ffffff18" }}
-                    />
+                    <textarea value={selected.userNotes} onChange={event => updateSelected({ userNotes: event.target.value })} placeholder="Ex : rideau immobile mais arrogant, box suspecte, café tiède..." className="w-full min-h-16 rounded border bg-transparent px-2 py-1 text-[10px] font-mono text-gray-200 outline-none" style={{ borderColor: "#ffffff18" }} />
                   </label>
                 </>
               )}
@@ -222,18 +234,17 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
               <div className="rounded border p-2 space-y-1" style={{ borderColor: "#9b59ff22", background: "rgba(155,89,255,0.04)" }}>
                 <div className="text-[8px] font-mono tracking-[0.22em] uppercase text-purple-300/80">Partager / soutenir</div>
                 <div className="text-[9px] font-mono text-purple-100/70 leading-relaxed">{LAB_LINE}</div>
-                <div className="text-[8px] font-mono text-cyan-200/70 leading-relaxed whitespace-pre-line">{SHARE_CTA}</div>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  <button type="button" onClick={shareSelected} className="rounded border border-cyan-300/25 px-2 py-1 text-[8px] font-mono tracking-wider text-cyan-300 uppercase">Partager</button>
-                  <button type="button" onClick={donate} className="rounded border border-orange-300/25 px-2 py-1 text-[8px] font-mono tracking-wider text-orange-300 uppercase">Don PayPal</button>
-                  <button type="button" onClick={copyLabLine} className="rounded border border-purple-300/25 px-2 py-1 text-[8px] font-mono tracking-wider text-purple-300 uppercase">Copier appel</button>
+                  <JournalButton tone="cyan" onClick={shareSelected}>Partager</JournalButton>
+                  <JournalButton tone="orange" onClick={donate}>Soutenir</JournalButton>
+                  <JournalButton tone="purple" onClick={copyLabLine}>Copier appel</JournalButton>
                 </div>
                 {shareStatus && <div className="text-[8px] font-mono text-green-300/70 tracking-wider pt-1 whitespace-pre-line">{shareStatus}</div>}
               </div>
 
               <div className="flex justify-between gap-2 pt-1">
-                <button type="button" onClick={removeSelected} className="text-[8px] font-mono tracking-wider text-red-300/70 uppercase">Supprimer</button>
-                <button type="button" onClick={wipe} className="text-[8px] font-mono tracking-wider text-gray-500 uppercase">Effacer tout</button>
+                <JournalButton tone="red" onClick={removeSelected}>Supprimer</JournalButton>
+                <JournalButton tone="purple" onClick={wipe}>Effacer tout</JournalButton>
               </div>
             </div>
           )}
