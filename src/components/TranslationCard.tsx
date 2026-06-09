@@ -29,15 +29,15 @@ const ANALYSIS_STEPS: Record<Lang, string[]> = {
 };
 
 const LIVE_LABEL: Record<Lang, string> = {
-  fr: "MOTS CAPTÉS DANS L'AIR // RECONSTRUCTION EN ATTENTE",
-  en: "WORDS CAUGHT IN THE AIR // RECONSTRUCTION PENDING",
-  es: "PALABRAS CAPTADAS EN EL AIRE // RECONSTRUCCIÓN PENDIENTE",
+  fr: "MOT CAPTÉ DANS L'AIR // RECONSTRUCTION EN ATTENTE",
+  en: "WORD CAUGHT IN THE AIR // RECONSTRUCTION PENDING",
+  es: "PALABRA CAPTADA EN EL AIRE // RECONSTRUCCIÓN PENDIENTE",
 };
 
 const EMPTY_LABEL: Record<Lang, string> = {
-  fr: "Fragments instables...",
-  en: "Unstable fragments...",
-  es: "Fragmentos inestables...",
+  fr: "Fragment isolé...",
+  en: "Isolated fragment...",
+  es: "Fragmento aislado...",
 };
 
 function buildFragments(text: string, lang: Lang) {
@@ -47,7 +47,7 @@ function buildFragments(text: string, lang: Lang) {
     .trim();
 
   const stopWords: Record<Lang, Set<string>> = {
-    fr: new Set(["avec", "dans", "pour", "mais", "donc", "quand", "comme", "cette", "être", "avait", "avais", "plus", "moins", "très", "près", "tout", "tous", "toute", "leurs", "leur", "sans", "sous", "chez", "elle", "elles", "nous", "vous", "ils", "des", "les", "une", "que", "qui", "pas", "non", "j'ai", "c'est"]),
+    fr: new Set(["avec", "dans", "pour", "mais", "donc", "quand", "comme", "cette", "être", "avait", "avais", "plus", "moins", "très", "près", "tout", "tous", "toute", "leurs", "leur", "sans", "sous", "chez", "elle", "elles", "nous", "vous", "ils", "des", "les", "une", "que", "qui", "pas", "non", "j'ai", "c'est", "était", "avait"]),
     en: new Set(["with", "that", "this", "there", "their", "they", "them", "from", "were", "where", "what", "when", "have", "should", "would", "could", "only", "just", "very", "into", "near", "here"]),
     es: new Set(["con", "para", "pero", "como", "esta", "este", "todo", "todos", "muy", "más", "menos", "donde", "cuando", "porque", "aquí", "ellas", "ellos", "una", "unos", "que", "por"]),
   };
@@ -59,17 +59,17 @@ function buildFragments(text: string, lang: Lang) {
     .filter(word => !stopWords[lang].has(word.toLowerCase()));
 
   const unique = Array.from(new Set(words));
-  const fragments = unique.slice(0, 9);
+  const fragments = unique.slice(0, 5);
 
-  if (fragments.length >= 3) return fragments;
+  if (fragments.length >= 2) return fragments;
 
   const fallbacks: Record<Lang, string[]> = {
-    fr: ["couloir", "pluie", "fenêtre", "bol", "attente", "tiroir"],
-    en: ["hallway", "rain", "window", "bowl", "waiting", "drawer"],
-    es: ["pasillo", "lluvia", "ventana", "cuenco", "espera", "cajón"],
+    fr: ["couloir", "fenêtre", "tiroir", "attente"],
+    en: ["hallway", "window", "drawer", "waiting"],
+    es: ["pasillo", "ventana", "cajón", "espera"],
   };
 
-  return Array.from(new Set([...fragments, ...fallbacks[lang]])).slice(0, 7);
+  return Array.from(new Set([...fragments, ...fallbacks[lang]])).slice(0, 4);
 }
 
 export function TranslationCard({ state, lang }: { state: AnalysisState; lang: Lang }) {
@@ -95,13 +95,13 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
       return;
     }
 
-    setVisibleCount(0);
-    let index = 0;
+    setVisibleCount(1);
+    let index = 1;
     const interval = window.setInterval(() => {
       index += 1;
       setVisibleCount(Math.min(index, fragments.length));
       if (index >= fragments.length) window.clearInterval(interval);
-    }, 460);
+    }, 780);
 
     return () => window.clearInterval(interval);
   }, [isLive, fragments.join("|")]);
@@ -141,7 +141,7 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
   const accentColor = state.isPoetic ? "#9b59ff" : isLive ? "#8f72ff" : "#00d4ff";
   const labelText = isLive ? LIVE_LABEL[lang] : state.isPoetic ? t.poetry : t.translation;
   const borderActive = isFinal || isLive;
-  const visibleFragments = fragments.slice(0, visibleCount);
+  const currentFragment = visibleCount > 0 ? fragments[Math.min(visibleCount - 1, fragments.length - 1)] : "";
 
   return (
     <div
@@ -229,23 +229,21 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
           <div className="text-[9px] font-mono uppercase tracking-[0.26em] text-purple-200/45">
             {EMPTY_LABEL[lang]}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {visibleFragments.map((fragment, index) => (
+          <div className="flex min-h-10 items-center gap-2">
+            {currentFragment && (
               <span
-                key={`${fragment}-${index}`}
-                className="rounded border px-2 py-1 font-mono text-[12px] tracking-[0.12em] lowercase transition-all duration-500"
+                className="rounded border px-3 py-1.5 font-mono text-[13px] lowercase tracking-[0.12em] transition-all duration-500"
                 style={{
-                  color: index % 3 === 0 ? "#cbb7ff" : index % 3 === 1 ? "#9ecfff" : "#c8b28a",
-                  borderColor: index % 3 === 0 ? "#9b59ff33" : index % 3 === 1 ? "#00d4ff22" : "#ff8c0022",
-                  background: "rgba(255,255,255,0.025)",
-                  opacity: 0.62 + Math.min(0.28, state.scanProgress / 260),
-                  transform: "translateY(0)",
-                  boxShadow: "0 0 12px rgba(155,89,255,0.08)",
+                  color: "#cbb7ff",
+                  borderColor: "#9b59ff44",
+                  background: "rgba(255,255,255,0.03)",
+                  opacity: 0.78 + Math.min(0.18, state.scanProgress / 400),
+                  boxShadow: "0 0 16px rgba(155,89,255,0.14)",
                 }}
               >
-                {fragment}
+                {currentFragment}
               </span>
-            ))}
+            )}
             {cursor && <span className="font-mono text-purple-300/70">▌</span>}
           </div>
         </div>
@@ -286,7 +284,7 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
           )}
           <span className="text-[8px] font-mono text-gray-600 tracking-wider">{t.confidence}: {state.confidence}%</span>
           <span className="text-[8px] font-mono text-gray-600 tracking-wider ml-auto">
-            {isLive ? "MOTS EN SUSPENSION" : t.institute + " // SPEC-TRL"}
+            {isLive ? "UN MOT À LA FOIS" : t.institute + " // SPEC-TRL"}
           </span>
         </div>
       )}
