@@ -19,7 +19,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Journal",
     support: "Soutenir",
     journalTitle: "Journal spectral compact",
-    footer: "Feuch Institute // SpecTRL v0.8 SLS CAMERA // radar seul // SLS caméra réel",
+    footer: "Feuch Institute // SpecTRL v1.1 COMPACT SILENCE // protocole compact // son modulable",
   },
   en: {
     actions: "Actions",
@@ -28,7 +28,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Journal",
     support: "Support",
     journalTitle: "Compact spectral journal",
-    footer: "Feuch Institute // SpecTRL v0.8 SLS CAMERA // radar only // real camera SLS",
+    footer: "Feuch Institute // SpecTRL v1.1 COMPACT SILENCE // compact protocol // sound control",
   },
   es: {
     actions: "Acciones",
@@ -37,7 +37,7 @@ const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: s
     journal: "Diario",
     support: "Apoyar",
     journalTitle: "Diario espectral compacto",
-    footer: "Feuch Institute // SpecTRL v0.8 SLS CAMERA // solo radar // SLS cámara real",
+    footer: "Feuch Institute // SpecTRL v1.1 COMPACT SILENCE // protocolo compacto // sonido ajustable",
   },
 };
 
@@ -49,7 +49,7 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
           <div>
             <div className="flex flex-wrap items-baseline gap-3">
               <h1 className="font-mono text-2xl font-black uppercase tracking-[0.22em] text-cyan-200 sm:text-3xl">SpecTRL</h1>
-              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.8 SLS CAMERA</span>
+              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v1.1 COMPACT SILENCE</span>
             </div>
             <div className="mt-1 text-[9px] font-mono uppercase tracking-[0.30em] text-orange-300/70">Feuch Institute // Marty trace resonance logger</div>
           </div>
