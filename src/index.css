@@ -98,6 +98,80 @@
     max-height: 18rem;
   }
 
+  .spectrl-cctv-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    opacity: 0.43;
+    mix-blend-mode: screen;
+  }
+
+  .spectrl-cctv-layer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, rgba(126,232,255,0.035) 0px, rgba(126,232,255,0.035) 1px, transparent 2px, transparent 5px),
+      repeating-linear-gradient(90deg, rgba(155,89,255,0.018) 0px, rgba(155,89,255,0.018) 1px, transparent 1px, transparent 7px),
+      radial-gradient(circle at 20% 18%, rgba(126,232,255,0.08), transparent 28%),
+      radial-gradient(circle at 88% 70%, rgba(155,89,255,0.09), transparent 30%);
+    animation: cctvNoise 1.15s steps(2, end) infinite;
+  }
+
+  .spectrl-cctv-layer::after {
+    content: "";
+    position: absolute;
+    left: -12%;
+    right: -12%;
+    top: -10%;
+    height: 24%;
+    background: linear-gradient(180deg, transparent, rgba(126,232,255,0.12), rgba(255,255,255,0.03), transparent);
+    filter: blur(0.4px);
+    animation: cctvRoll 5.8s linear infinite;
+  }
+
+  .spectrl-cctv-active {
+    opacity: 0.68;
+    animation: cctvMicroShift 0.22s steps(2, end) infinite;
+  }
+
+  .spectrl-cctv-active::before {
+    animation: cctvNoise 0.42s steps(2, end) infinite, cctvChromatic 1.9s steps(3, end) infinite;
+  }
+
+  .spectrl-cctv-band {
+    position: fixed;
+    left: -6vw;
+    right: -6vw;
+    height: 2px;
+    pointer-events: none;
+    z-index: 41;
+    opacity: 0.18;
+    background: rgba(199,255,240,0.72);
+    box-shadow: 0 0 14px rgba(126,232,255,0.45), 0 0 2px rgba(255,255,255,0.8);
+    animation: cctvBand 3.4s linear infinite;
+  }
+
+  .spectrl-cctv-band:nth-of-type(2) {
+    animation-duration: 4.7s;
+    opacity: 0.11;
+    background: rgba(155,89,255,0.65);
+  }
+
+  .spectrl-cctv-label {
+    position: fixed;
+    top: 0.55rem;
+    right: 0.7rem;
+    z-index: 42;
+    pointer-events: none;
+    color: rgba(199,255,240,0.46);
+    font-size: 0.43rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    text-shadow: 0 0 7px rgba(126,232,255,0.42);
+  }
+
   @media (min-width: 640px) {
     main > section.grid {
       grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -140,4 +214,39 @@
 @keyframes barPulse {
   0% { opacity: 0.4; transform: scaleY(0.6); }
   100% { opacity: 1; transform: scaleY(1); }
+}
+
+@keyframes cctvNoise {
+  0% { opacity: 0.32; filter: contrast(1) brightness(1); }
+  22% { opacity: 0.48; filter: contrast(1.24) brightness(1.05); }
+  44% { opacity: 0.25; filter: contrast(0.92) brightness(0.94); }
+  67% { opacity: 0.52; filter: contrast(1.34) brightness(1.08); }
+  100% { opacity: 0.36; filter: contrast(1.04) brightness(1); }
+}
+
+@keyframes cctvRoll {
+  0% { transform: translateY(-25vh); opacity: 0; }
+  10% { opacity: 0.26; }
+  50% { opacity: 0.12; }
+  100% { transform: translateY(125vh); opacity: 0; }
+}
+
+@keyframes cctvBand {
+  0% { transform: translateY(-8vh) skewX(-12deg); }
+  100% { transform: translateY(110vh) skewX(-12deg); }
+}
+
+@keyframes cctvMicroShift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(1px, -1px); }
+  50% { transform: translate(-1px, 0); }
+  75% { transform: translate(2px, 1px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes cctvChromatic {
+  0% { filter: hue-rotate(0deg); }
+  33% { filter: hue-rotate(12deg); }
+  66% { filter: hue-rotate(-18deg); }
+  100% { filter: hue-rotate(0deg); }
 }
