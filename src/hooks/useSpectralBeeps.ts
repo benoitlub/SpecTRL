@@ -28,7 +28,6 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
   const subGainRef = useRef<GainNode | null>(null);
   const shimmerGainRef = useRef<GainNode | null>(null);
   const timerRef = useRef<number | null>(null);
-  const wasActiveRef = useRef(false);
   const [mode, setMode] = useState<SoundMode>(() => readSoundMode());
 
   useEffect(() => {
@@ -47,6 +46,27 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
     const stopTimer = () => {
       if (timerRef.current) window.clearInterval(timerRef.current);
       timerRef.current = null;
+    };
+
+    const stopHum = () => {
+      const ctx = ctxRef.current;
+      const master = masterRef.current;
+      if (ctx && master) master.gain.setTargetAtTime(0, ctx.currentTime, 0.035);
+      if (ctx && humGainRef.current) humGainRef.current.gain.setTargetAtTime(0, ctx.currentTime, 0.04);
+      if (ctx && subGainRef.current) subGainRef.current.gain.setTargetAtTime(0, ctx.currentTime, 0.04);
+      if (ctx && shimmerGainRef.current) shimmerGainRef.current.gain.setTargetAtTime(0, ctx.currentTime, 0.04);
+      window.setTimeout(() => {
+        try { humRef.current?.stop(); } catch {}
+        try { subRef.current?.stop(); } catch {}
+        try { shimmerRef.current?.stop(); } catch {}
+        humRef.current = null;
+        subRef.current = null;
+        shimmerRef.current = null;
+        humGainRef.current = null;
+        subGainRef.current = null;
+        shimmerGainRef.current = null;
+        if (ctxRef.current?.state === "running") ctxRef.current.suspend().catch(() => undefined);
+      }, 90);
     };
 
     const ensureContext = () => {
@@ -200,24 +220,6 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
       shimmerGainRef.current = shimmerGain;
     };
 
-    const stopHum = () => {
-      const ctx = ctxRef.current;
-      if (ctx && humGainRef.current) humGainRef.current.gain.setTargetAtTime(0, ctx.currentTime, 0.14);
-      if (ctx && subGainRef.current) subGainRef.current.gain.setTargetAtTime(0, ctx.currentTime, 0.18);
-      if (ctx && shimmerGainRef.current) shimmerGainRef.current.gain.setTargetAtTime(0, ctx.currentTime, 0.12);
-      window.setTimeout(() => {
-        try { humRef.current?.stop(); } catch {}
-        try { subRef.current?.stop(); } catch {}
-        try { shimmerRef.current?.stop(); } catch {}
-        humRef.current = null;
-        subRef.current = null;
-        shimmerRef.current = null;
-        humGainRef.current = null;
-        subGainRef.current = null;
-        shimmerGainRef.current = null;
-      }, 280);
-    };
-
     if (scale <= 0) {
       stopTimer();
       stopHum();
@@ -225,7 +227,6 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
     }
 
     if (active) {
-      wasActiveRef.current = true;
       startHum();
       stopTimer();
       playTone(96, 0.12, 0.07, "triangle");
@@ -244,14 +245,6 @@ export function useSpectralBeeps(active: boolean, progress: number, complete: bo
     } else {
       stopTimer();
       stopHum();
-      if (complete && wasActiveRef.current) {
-        window.setTimeout(() => playPulse(), 20);
-        window.setTimeout(() => playTone(160, 0.20, 0.085, "triangle"), 90);
-        window.setTimeout(() => playTone(390, 0.18, 0.075, "sine"), 230);
-        window.setTimeout(() => playTone(690, 0.20, 0.068, "triangle"), 390);
-        window.setTimeout(() => playAirCrackle(true), 560);
-      }
-      wasActiveRef.current = false;
     }
 
     return () => stopTimer();
