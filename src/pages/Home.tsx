@@ -9,33 +9,35 @@ import { SpeciesPanel, SignalQualityPanel, NeuralPanel } from "../components/Ana
 import { type Lang } from "../data/animals";
 import { createSpectralJournalEntry, saveSpectralJournalEntry, type SpectralJournalEntry } from "../utils/spectralJournal";
 
-const ACTION_COPY: Record<Lang, { actions: string; exportSoon: string; hideJournal: string; journal: string; helpSoon: string; journalTitle: string; footer: string }> = {
+const PAYPAL_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=benoitlubert@gmail.com&currency_code=EUR&item_name=Support+SpecTRL";
+
+const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: string; journal: string; support: string; journalTitle: string; footer: string }> = {
   fr: {
     actions: "Actions",
-    exportSoon: "Exporter bientôt",
+    share: "Partager",
     hideJournal: "Masquer journal",
     journal: "Journal",
-    helpSoon: "Aider bientôt",
-    journalTitle: "Journal spectral // modèle Creature-sync",
-    footer: "Feuch Institute // SpecTRL v0.3 CREATURE MODEL // Journal local // actions prioritaires",
+    support: "Soutenir",
+    journalTitle: "Journal spectral compact",
+    footer: "Feuch Institute // SpecTRL v0.4 SPECTRAL WORDS // Journal local // partage + dons actifs",
   },
   en: {
     actions: "Actions",
-    exportSoon: "Export soon",
+    share: "Share",
     hideJournal: "Hide journal",
     journal: "Journal",
-    helpSoon: "Support soon",
-    journalTitle: "Spectral journal // Creature-sync model",
-    footer: "Feuch Institute // SpecTRL v0.3 CREATURE MODEL // Local journal // priority actions",
+    support: "Support",
+    journalTitle: "Compact spectral journal",
+    footer: "Feuch Institute // SpecTRL v0.4 SPECTRAL WORDS // Local journal // share + support active",
   },
   es: {
     actions: "Acciones",
-    exportSoon: "Exportar pronto",
+    share: "Compartir",
     hideJournal: "Ocultar diario",
     journal: "Diario",
-    helpSoon: "Apoyar pronto",
-    journalTitle: "Diario espectral // modelo Creature-sync",
-    footer: "Feuch Institute // SpecTRL v0.3 CREATURE MODEL // Diario local // acciones prioritarias",
+    support: "Apoyar",
+    journalTitle: "Diario espectral compacto",
+    footer: "Feuch Institute // SpecTRL v0.4 SPECTRAL WORDS // Diario local // compartir + apoyo activo",
   },
 };
 
@@ -47,7 +49,7 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
           <div>
             <div className="flex flex-wrap items-baseline gap-3">
               <h1 className="font-mono text-2xl font-black uppercase tracking-[0.22em] text-cyan-200 sm:text-3xl">SpecTRL</h1>
-              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.3 CREATURE MODEL</span>
+              <span className="rounded border border-purple-300/30 px-2 py-0.5 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-100/80">v0.4 SPECTRAL WORDS</span>
             </div>
             <div className="mt-1 text-[9px] font-mono uppercase tracking-[0.30em] text-orange-300/70">Feuch Institute // Marty trace resonance logger</div>
           </div>
@@ -72,8 +74,35 @@ function Footer({ lang }: { lang: Lang }) {
   );
 }
 
-function ActionPanel({ lang, showJournal, setShowJournal }: { lang: Lang; showJournal: boolean; setShowJournal: (value: boolean) => void }) {
+function ActionPanel({ lang, showJournal, setShowJournal, latestEntry }: { lang: Lang; showJournal: boolean; setShowJournal: (value: boolean) => void; latestEntry: SpectralJournalEntry | null }) {
   const copy = ACTION_COPY[lang];
+
+  const handleShare = async () => {
+    const title = latestEntry ? `SpecTRL — ${latestEntry.signatureName}` : "SpecTRL";
+    const text = latestEntry
+      ? `${latestEntry.signatureName} — ${latestEntry.confidence}%\n${latestEntry.translation}`
+      : "SpecTRL — Marty Trace Resonance Logger";
+    const url = "https://benoitlub.github.io/SpecTRL/";
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(`${title}\n${text}\n${url}`);
+      window.alert("Trace copiée avec le lien SpecTRL.");
+    } catch {
+      try {
+        await navigator.clipboard.writeText(`${title}\n${text}\n${url}`);
+      } catch {
+        window.alert("Partage impossible ici, Marty garde la trace en mémoire.");
+      }
+    }
+  };
+
+  const handleDonate = () => {
+    window.open(PAYPAL_URL, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="rounded-2xl border border-orange-300/25 bg-slate-950/70 p-3 shadow-[0_0_24px_rgba(255,140,0,0.08)]">
       <div className="mb-2 flex items-center justify-between">
@@ -81,9 +110,9 @@ function ActionPanel({ lang, showJournal, setShowJournal }: { lang: Lang; showJo
         <div className="text-[8px] font-mono uppercase tracking-[0.22em] text-white/30">Feuch Institute</div>
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <button type="button" className="rounded border border-cyan-300/35 bg-cyan-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-100">{copy.exportSoon}</button>
+        <button type="button" onClick={handleShare} className="rounded border border-cyan-300/35 bg-cyan-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-100">{copy.share}</button>
         <button type="button" onClick={() => setShowJournal(!showJournal)} className="rounded border border-purple-300/35 bg-purple-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-purple-100">{showJournal ? copy.hideJournal : copy.journal}</button>
-        <button type="button" className="rounded border border-orange-300/40 bg-orange-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-orange-100">{copy.helpSoon}</button>
+        <button type="button" onClick={handleDonate} className="rounded border border-orange-300/40 bg-orange-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-orange-100">{copy.support}</button>
       </div>
     </div>
   );
@@ -134,12 +163,12 @@ export default function Home() {
           <NeuralPanel state={state} lang={lang} />
         </div>
 
-        <ActionPanel lang={lang} showJournal={showJournal} setShowJournal={setShowJournal} />
+        <ActionPanel lang={lang} showJournal={showJournal} setShowJournal={setShowJournal} latestEntry={latestEntry} />
 
         {showJournal && (
           <div className="rounded-2xl border border-purple-300/20 bg-slate-950/60 p-2">
             <div className="px-2 pb-2 text-[9px] font-mono uppercase tracking-[0.24em] text-purple-200/70">{ACTION_COPY[lang].journalTitle}</div>
-            <SpectralJournal latestEntry={latestEntry} />
+            <SpectralJournal latestEntry={latestEntry} compact />
           </div>
         )}
       </main>
