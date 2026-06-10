@@ -1,0 +1,114 @@
+/* Home VHS / CCTV glitch bursts */
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+
+body::before {
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.055) 0 1px, transparent 1px 4px),
+    linear-gradient(90deg, transparent, rgba(126,232,255,.08), transparent),
+    radial-gradient(circle at 48% 42%, rgba(155,89,255,.10), transparent 42%);
+  animation: homeCctvDropout 11s steps(1,end) infinite;
+}
+
+body::after {
+  background:
+    linear-gradient(180deg, transparent 0 38%, rgba(255,255,255,.12) 39%, transparent 43%),
+    linear-gradient(90deg, rgba(126,232,255,.12), transparent 22%, transparent 72%, rgba(255,80,180,.08));
+  transform: translateX(0);
+  animation: homeVhsTear 17s steps(1,end) infinite;
+}
+
+#root {
+  animation: homeVhsBodyPulse 19s steps(1,end) infinite;
+}
+
+@keyframes homeCctvDropout {
+  0%, 8%, 8.8%, 27%, 27.6%, 51%, 51.9%, 78%, 78.7%, 100% {
+    opacity: 0;
+    transform: translateX(0) skewX(0deg);
+    filter: none;
+  }
+  8.2% {
+    opacity: .32;
+    transform: translateX(-7px) skewX(-2deg);
+    filter: contrast(1.7) brightness(1.25) saturate(1.4);
+  }
+  8.45% {
+    opacity: .18;
+    transform: translateX(10px) skewX(3deg);
+  }
+  27.18% {
+    opacity: .26;
+    transform: translateX(5px) skewX(1.6deg);
+    filter: contrast(1.45) brightness(1.18);
+  }
+  51.25% {
+    opacity: .38;
+    transform: translateY(-3px) skewX(-3deg);
+    filter: contrast(2) hue-rotate(16deg);
+  }
+  78.28% {
+    opacity: .30;
+    transform: translateX(-12px) skewX(-2.6deg);
+    filter: brightness(1.35) saturate(1.7);
+  }
+}
+
+@keyframes homeVhsTear {
+  0%, 12%, 12.9%, 36%, 36.6%, 63%, 63.7%, 90%, 90.4%, 100% {
+    opacity: 0;
+    transform: translate(0,0) scaleX(1);
+  }
+  12.2% {
+    opacity: .36;
+    transform: translate(14px,-8px) scaleX(1.035);
+  }
+  12.48% {
+    opacity: .21;
+    transform: translate(-9px,11px) scaleX(.985);
+  }
+  36.2% {
+    opacity: .30;
+    transform: translate(-18px,4px) scaleX(1.045);
+  }
+  63.25% {
+    opacity: .42;
+    transform: translate(9px,-12px) scaleX(1.06);
+  }
+  90.18% {
+    opacity: .26;
+    transform: translate(-7px,8px) scaleX(.96);
+  }
+}
+
+@keyframes homeVhsBodyPulse {
+  0%, 9%, 9.4%, 31%, 31.5%, 58%, 58.5%, 82%, 82.35%, 100% {
+    filter: none;
+    transform: none;
+  }
+  9.15% {
+    filter: contrast(1.18) saturate(1.24) hue-rotate(5deg);
+    transform: translateX(.6px);
+  }
+  31.22% {
+    filter: contrast(1.28) brightness(.92) saturate(1.38);
+    transform: translateX(-.8px);
+  }
+  58.18% {
+    filter: contrast(1.35) brightness(1.08) hue-rotate(-8deg);
+    transform: translateY(.7px);
+  }
+  82.12% {
+    filter: contrast(1.22) saturate(1.5);
+    transform: translateX(1px);
+  }
+}
