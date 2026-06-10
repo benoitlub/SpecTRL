@@ -1,0 +1,104 @@
+/* SLS frame bulbs + fixed first-row sensor panels */
+
+main > section.grid > div:nth-child(1),
+main > section.grid > div:nth-child(2) {
+  height: 220px !important;
+  min-height: 220px !important;
+  display: flex;
+  flex-direction: column;
+}
+
+main > section.grid > div:nth-child(1) > *,
+main > section.grid > div:nth-child(2) > * {
+  min-height: 0;
+}
+
+@media (max-width: 640px) {
+  main > section.grid > div:nth-child(1),
+  main > section.grid > div:nth-child(2) {
+    height: 200px !important;
+    min-height: 200px !important;
+  }
+}
+
+.fixed .aspect-video {
+  --sls-bulb-off: rgba(255,255,255,.22);
+  --sls-bulb-on: rgba(199,255,240,.96);
+  --sls-bulb-blue: rgba(126,232,255,.72);
+  --sls-bulb-violet: rgba(155,89,255,.34);
+  overflow: hidden;
+  border-color: rgba(126,232,255,.28) !important;
+  background-image:
+    radial-gradient(circle at 8px 8px, var(--sls-bulb-on) 0 3px, rgba(126,232,255,.28) 4px, transparent 11px),
+    radial-gradient(circle at 50% 8px, var(--sls-bulb-on) 0 3px, rgba(126,232,255,.25) 4px, transparent 12px),
+    radial-gradient(circle at calc(100% - 8px) 8px, var(--sls-bulb-on) 0 3px, rgba(126,232,255,.25) 4px, transparent 12px),
+    radial-gradient(circle at 8px 50%, var(--sls-bulb-on) 0 3px, rgba(155,89,255,.24) 4px, transparent 12px),
+    radial-gradient(circle at calc(100% - 8px) 50%, var(--sls-bulb-on) 0 3px, rgba(155,89,255,.24) 4px, transparent 12px),
+    radial-gradient(circle at 8px calc(100% - 8px), var(--sls-bulb-on) 0 3px, rgba(126,232,255,.25) 4px, transparent 12px),
+    radial-gradient(circle at 50% calc(100% - 8px), var(--sls-bulb-on) 0 3px, rgba(126,232,255,.25) 4px, transparent 12px),
+    radial-gradient(circle at calc(100% - 8px) calc(100% - 8px), var(--sls-bulb-on) 0 3px, rgba(126,232,255,.25) 4px, transparent 12px) !important;
+  box-shadow:
+    inset 0 0 30px rgba(0,0,0,.70),
+    inset 0 0 58px rgba(126,232,255,.10),
+    0 0 28px rgba(126,232,255,.14),
+    0 0 36px rgba(155,89,255,.16) !important;
+}
+
+.fixed .aspect-video::before,
+.fixed .aspect-video::after {
+  z-index: 45 !important;
+  font-size: .43rem !important;
+  letter-spacing: .16em !important;
+  color: rgba(210,255,248,.90) !important;
+  text-shadow:
+    0 0 6px rgba(199,255,240,.82),
+    0 0 14px rgba(126,232,255,.58),
+    0 0 22px rgba(155,89,255,.28) !important;
+  animation: slsBulbTextBuzz 2.9s steps(2,end) infinite !important;
+}
+
+.fixed .aspect-video::before {
+  content: "CAM        MIC        RMS" !important;
+  top: .42rem !important;
+  left: 1rem !important;
+  right: 1rem !important;
+}
+
+.fixed .aspect-video::after {
+  content: "MOT        TLT        CNT" !important;
+  bottom: .42rem !important;
+  left: 1rem !important;
+  right: 1rem !important;
+}
+
+.fixed .aspect-video .sls-resonance-trace {
+  opacity: .86 !important;
+  filter:
+    blur(.42px)
+    contrast(1.72)
+    saturate(1.75)
+    drop-shadow(0 0 10px rgba(126,232,255,.48)) !important;
+}
+
+.fixed .aspect-video .sls-resonance-label {
+  bottom: 2.25rem !important;
+  color: rgba(199,255,240,.88) !important;
+  text-shadow:
+    0 0 7px rgba(126,232,255,.80),
+    0 0 16px rgba(155,89,255,.30) !important;
+}
+
+.fixed .aspect-video > video,
+.fixed .aspect-video > canvas:not(.hidden) {
+  border-radius: inherit;
+}
+
+@keyframes slsBulbTextBuzz {
+  0%, 100% { opacity: .82; transform: translate(0,0); }
+  8% { opacity: .48; transform: translate(.25px,-.15px); }
+  11% { opacity: .95; transform: translate(-.2px,.1px); }
+  39% { opacity: .68; }
+  41% { opacity: 1; }
+  74% { opacity: .54; transform: translate(.2px,.2px); }
+  76% { opacity: .94; transform: translate(0,0); }
+}
