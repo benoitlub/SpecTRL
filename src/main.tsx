@@ -3,5 +3,6 @@ import App from "./App";
 import "./index.css";
 import "./spectrl-overrides.css";
 import "./spectrl-v13-safe.css";
+import "./slsAuto";
 
 createRoot(document.getElementById("root")!).render(<App />);
