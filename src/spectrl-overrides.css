@@ -1,0 +1,110 @@
+/* SpecTRL v1.3 — cadence lente, diodes SLS, altérations sales */
+
+.spectrl-text-live {
+  transition-duration: 1400ms !important;
+  animation-duration: 5.2s !important;
+  animation-timing-function: steps(3, end) !important;
+}
+
+.spectrl-text-live::before {
+  animation-duration: 4.9s !important;
+}
+
+.spectrl-text-live::after {
+  animation-duration: 5.8s !important;
+}
+
+.spectrl-text-final-active {
+  animation-duration: 6.8s, 4.4s !important;
+}
+
+/* cible la fenêtre SLS sans toucher au reste : panneau modal + cadre aspect-video */
+.fixed .aspect-video {
+  isolation: isolate;
+  box-shadow:
+    inset 0 0 28px rgba(0,0,0,.62),
+    inset 0 0 42px rgba(126,232,255,.09),
+    0 0 28px rgba(155,89,255,.18) !important;
+}
+
+.fixed .aspect-video video {
+  filter:
+    grayscale(1)
+    contrast(2.35)
+    brightness(.46)
+    saturate(1.75)
+    sepia(.16)
+    hue-rotate(205deg)
+    blur(.25px) !important;
+  transform: scale(1.025);
+}
+
+.fixed .aspect-video canvas:not(.hidden) {
+  filter:
+    contrast(1.55)
+    saturate(1.5)
+    drop-shadow(0 0 12px rgba(126,232,255,.82))
+    drop-shadow(0 0 22px rgba(155,89,255,.36)) !important;
+  mix-blend-mode: screen;
+}
+
+.fixed .aspect-video::before,
+.fixed .aspect-video::after {
+  position: absolute;
+  z-index: 31;
+  left: .45rem;
+  right: .45rem;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--app-font-mono);
+  font-size: .42rem;
+  letter-spacing: .18em;
+  color: rgba(199,255,240,.82);
+  text-shadow: 0 0 8px rgba(126,232,255,.78), 0 0 14px rgba(155,89,255,.36);
+  mix-blend-mode: screen;
+  animation: slsDiodePulse 2.9s steps(3, end) infinite;
+}
+
+.fixed .aspect-video::before {
+  content: "● CAM      ● MIC      ● RMS      ● FLT";
+  top: .42rem;
+}
+
+.fixed .aspect-video::after {
+  content: "● MOT      ● GYR      ● TLT      ● CNT";
+  bottom: .42rem;
+  animation-delay: -1.1s;
+}
+
+.fixed .aspect-video > div[style*="grid"] {
+  filter: contrast(1.12) brightness(.88);
+}
+
+.fixed .aspect-video > div[style*="grid"]::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(126,232,255,.10), transparent),
+    repeating-linear-gradient(0deg, transparent 0 8px, rgba(199,255,240,.055) 9px, transparent 10px);
+  transform: skewX(-14deg);
+  animation: slsTear 3.7s linear infinite;
+}
+
+@keyframes slsDiodePulse {
+  0%, 100% { opacity: .38; filter: blur(0); }
+  30% { opacity: .95; filter: blur(.1px); }
+  34% { opacity: .22; transform: translateX(1px); }
+  42% { opacity: .88; transform: translateX(-1px); }
+  70% { opacity: .52; }
+}
+
+@keyframes slsTear {
+  0% { transform: translateY(-38%) skewX(-14deg); opacity: 0; }
+  16% { opacity: .22; }
+  50% { opacity: .08; }
+  100% { transform: translateY(42%) skewX(-14deg); opacity: 0; }
+}
