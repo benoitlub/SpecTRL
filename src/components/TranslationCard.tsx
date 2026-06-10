@@ -168,7 +168,7 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
               style={{ borderColor: "rgba(155,89,255,0.12)", background: "linear-gradient(180deg, rgba(255,255,255,0.012), rgba(255,255,255,0.005))", boxShadow: "inset 0 0 12px rgba(155,89,255,0.03), 0 0 10px rgba(155,89,255,0.03)" }}
             >
               {currentFragment && (
-                <span className="font-mono text-[14px] lowercase tracking-[0.08em] transition-all duration-700 sm:text-[16px]" style={{ color: "#e9ddff", opacity: ghostStyle.opacity, transform: ghostStyle.transform, filter: ghostStyle.filter, textShadow: ghostStyle.textShadow }}>
+                <span data-text={currentFragment} className="spectrl-text-live font-mono text-[14px] lowercase tracking-[0.08em] transition-all duration-700 sm:text-[16px]" style={{ color: "#e9ddff", opacity: ghostStyle.opacity, transform: ghostStyle.transform, filter: ghostStyle.filter, textShadow: ghostStyle.textShadow }}>
                   {currentFragment}
                 </span>
               )}
@@ -178,7 +178,7 @@ export function TranslationCard({ state, lang }: { state: AnalysisState; lang: L
       )}
 
       {isFinal && (
-        <div className="max-h-[5.5rem] overflow-auto rounded border border-cyan-300/10 bg-black/10 px-2 py-1.5 font-mono text-[12px] leading-snug sm:text-[13px]" style={{ color: state.isPoetic ? "#c4a8ff" : "#e2f5ff", textShadow: state.isPoetic ? "0 0 10px #9b59ff33" : "none", fontStyle: state.isPoetic ? "italic" : "normal", letterSpacing: "0.01em" }}>
+        <div className="spectrl-text-final spectrl-text-final-active max-h-[5.5rem] overflow-auto rounded border border-cyan-300/10 bg-black/10 px-2 py-1.5 font-mono text-[12px] leading-snug sm:text-[13px]" style={{ color: state.isPoetic ? "#c4a8ff" : "#e2f5ff", textShadow: state.isPoetic ? "0 0 10px #9b59ff33" : undefined, fontStyle: state.isPoetic ? "italic" : "normal", letterSpacing: "0.01em" }}>
           {!displayed && <span className="text-[9px] uppercase tracking-[0.18em] text-cyan-400/50">reconstruction...</span>}
           {state.isPoetic && displayed && <span className="text-purple-400/60 mr-1">&ldquo;</span>}
           {displayed}
