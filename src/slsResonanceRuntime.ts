@@ -7,11 +7,25 @@ type VideoLayer = {
   tick: number;
 };
 
+type ResonanceWindow = Window & typeof globalThis & {
+  __spectrlSlsResonance?: { density: number; pulse: number };
+};
+
 const layers = new WeakMap<HTMLElement, VideoLayer>();
 let raf = 0;
+let resonancePulse = 0;
 
 function clamp(value: number, min = 0, max = 255) {
   return Math.max(min, Math.min(max, value));
+}
+
+function publishResonance(density: number) {
+  const normalized = Math.max(0, Math.min(1, density));
+  resonancePulse = Math.max(resonancePulse * 0.92, normalized);
+  (window as ResonanceWindow).__spectrlSlsResonance = {
+    density: normalized,
+    pulse: resonancePulse,
+  };
 }
 
 function makeLayer(host: HTMLElement): VideoLayer {
@@ -85,9 +99,13 @@ function drawLayer(layer: VideoLayer) {
   layer.lastFrame = new Uint8ClampedArray(frame.data);
   layer.tick += 1;
 
+  const rawDensity = points / (width * height);
+  const density = Math.max(0, Math.min(1, rawDensity * 3));
+  publishResonance(density);
+
   if (layer.tick % 8 === 0) {
-    const density = Math.round((points / (width * height)) * 999);
-    layer.label.textContent = `RÉSONANCE // TRACE ${density.toString().padStart(3, "0")} // LENTE`;
+    const labelDensity = Math.round(density * 999);
+    layer.label.textContent = `RÉSONANCE // TRACE ${labelDensity.toString().padStart(3, "0")} // LENTE`;
   }
 }
 
