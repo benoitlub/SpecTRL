@@ -149,7 +149,7 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
     <div className="rounded border p-2 backdrop-blur-sm" style={{ borderColor: "#9b59ff36", background: "rgba(7,5,22,0.72)", boxShadow: "inset 0 0 16px rgba(155,89,255,0.08)" }}>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <button type="button" onClick={() => setOpen(o => !o)} className="text-left">
-          <span className="block text-[9px] font-mono tracking-[0.32em] uppercase text-purple-300/90">Journal des traces spectrales</span>
+          <span className="spectrl-journal-line block text-[9px] font-mono tracking-[0.32em] uppercase text-purple-300/90">Journal des traces spectrales</span>
           <span className="block text-[8px] font-mono tracking-wider text-gray-500">{entries.length} trace{entries.length > 1 ? "s" : ""} // {open ? "fermer" : "ouvrir"}</span>
         </button>
         <div className="flex flex-wrap gap-2">
@@ -160,7 +160,7 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
       </div>
 
       {latestEntry && !open && (
-        <div className="mt-2 flex items-center justify-between gap-2 text-[8px] font-mono text-green-300/70 tracking-wider">
+        <div className="spectrl-journal-line mt-2 flex items-center justify-between gap-2 text-[8px] font-mono text-green-300/70 tracking-wider">
           <span className="truncate">Dernière rémanence : {latestEntry.signatureName} — {latestEntry.confidence}%</span>
           <JournalButton tone="purple" onClick={saveAgain}>Archiver</JournalButton>
         </div>
@@ -179,7 +179,7 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
                 key={entry.id}
                 type="button"
                 onClick={() => setSelectedId(entry.id)}
-                className="w-full rounded-lg border px-2.5 py-2 text-left transition-all active:scale-[0.99]"
+                className="spectrl-journal-entry w-full rounded-lg border px-2.5 py-2 text-left transition-all active:scale-[0.99]"
                 style={{
                   borderColor: selected?.id === entry.id ? "#9b59ff72" : "#ffffff13",
                   background: selected?.id === entry.id ? "rgba(155,89,255,0.10)" : "rgba(255,255,255,0.025)",
@@ -187,7 +187,7 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
                 }}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[9px] font-mono text-purple-100 truncate">{entry.signatureName}</span>
+                  <span className="spectrl-journal-line text-[9px] font-mono text-purple-100 truncate">{entry.signatureName}</span>
                   <span className="text-[8px] font-mono text-cyan-300">{entry.confidence}%</span>
                 </div>
                 <div className="text-[8px] font-mono text-gray-500 truncate">{formatDate(entry.createdAt)}</div>
@@ -196,16 +196,16 @@ export function SpectralJournal({ latestEntry, compact = false }: { latestEntry:
           </div>
 
           {selected && (
-            <div className="rounded border p-2 space-y-2" style={{ borderColor: "#ffffff14", background: "rgba(2,8,20,0.62)" }}>
+            <div className="spectrl-journal-entry rounded border p-2 space-y-2" style={{ borderColor: "#ffffff14", background: "rgba(2,8,20,0.62)" }}>
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <div className="text-sm font-mono font-bold text-white tracking-wider">{selected.signatureName}</div>
+                  <div className="spectrl-journal-line text-sm font-mono font-bold text-white tracking-wider">{selected.signatureName}</div>
                   <div className="text-[8px] font-mono text-gray-500 tracking-wider">{formatDate(selected.createdAt)} // {selected.habitat}</div>
                 </div>
                 <JournalButton tone="purple" onClick={() => updateSelected({ favorite: !selected.favorite })}>{selected.favorite ? "★" : "☆"}</JournalButton>
               </div>
 
-              <div className="rounded border p-2 text-[11px] font-mono leading-relaxed text-purple-50/90 whitespace-pre-line" style={{ borderColor: "#9b59ff28" }}>
+              <div className="spectrl-text-final rounded border p-2 text-[11px] font-mono leading-relaxed text-purple-50/90 whitespace-pre-line" style={{ borderColor: "#9b59ff28" }}>
                 {selected.translation}
               </div>
 
