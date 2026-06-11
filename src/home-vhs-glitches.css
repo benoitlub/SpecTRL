@@ -1,4 +1,5 @@
-/* Home VHS / CCTV glitch bursts */
+/* Home VHS / CCTV glitch bursts
+   Important: never transform #root, otherwise fixed controls can anchor to the full page. */
 
 body::before,
 body::after {
@@ -23,7 +24,6 @@ body::after {
   background:
     linear-gradient(180deg, transparent 0 38%, rgba(255,255,255,.12) 39%, transparent 43%),
     linear-gradient(90deg, rgba(126,232,255,.12), transparent 22%, transparent 72%, rgba(255,80,180,.08));
-  transform: translateX(0);
   animation: homeVhsTear 17s steps(1,end) infinite;
 }
 
@@ -93,22 +93,17 @@ body::after {
 @keyframes homeVhsBodyPulse {
   0%, 9%, 9.4%, 31%, 31.5%, 58%, 58.5%, 82%, 82.35%, 100% {
     filter: none;
-    transform: none;
   }
   9.15% {
     filter: contrast(1.18) saturate(1.24) hue-rotate(5deg);
-    transform: translateX(.6px);
   }
   31.22% {
     filter: contrast(1.28) brightness(.92) saturate(1.38);
-    transform: translateX(-.8px);
   }
   58.18% {
     filter: contrast(1.35) brightness(1.08) hue-rotate(-8deg);
-    transform: translateY(.7px);
   }
   82.12% {
     filter: contrast(1.22) saturate(1.5);
-    transform: translateX(1px);
   }
 }
