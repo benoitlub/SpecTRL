@@ -82,8 +82,8 @@ export class SpecTRLOctopusAdapter {
         },
         body: JSON.stringify({
           operationId: `spectrl_${event.id}`,
-          title: `Qualifier une observation spectrale ${event.type}`,
-          objective: "Qualifier brièvement une observation spectrale et indiquer si une analyse complémentaire est utile.",
+          title: `Analyser une observation spectrale ${event.type}`,
+          objective: "Évaluer une observation spectrale et proposer une action utile sans modifier ni bloquer SpecTRL.",
           context: {
             id: `spectrl:${event.id}`,
             label: event.payload.metadata?.signatureName ?? event.type,
@@ -92,13 +92,12 @@ export class SpecTRLOctopusAdapter {
               : "Interpréter une observation spectrale.",
             metadata: { source: "spectrl", event },
           },
-          // Octopus currently exposes copy.generate. No Mistral authorization is granted here:
-          // a waiting-authorization response is enough to prove the neutral mission path works.
-          requiredCapabilities: ["copy.generate"],
+          requiredCapabilities: ["observation.analyze"],
           authorizedResources: [],
           prompt: [
-            "Résume cette observation spectrale en une phrase factuelle.",
-            "N'exécute aucune action externe sans autorisation.",
+            "Analyse cette observation spectrale.",
+            "Réponds avec decision, reason et actions.",
+            "decision doit être ignore, record, enrich ou request_analysis.",
             `Type : ${event.type}`,
             `Confiance : ${event.payload.confidence ?? "non précisée"}`,
             `Fréquence dominante : ${event.payload.frequencyPeakHz ?? "non précisée"}`,
