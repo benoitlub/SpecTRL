@@ -15,8 +15,8 @@ function inferDecision(mission: OctopusMissionResponse): OctopusDecision {
   const decision = typeof output.decision === "string"
     ? output.decision
     : mission.status === "completed"
-      ? "enrich"
-      : mission.status === "waiting-authorization"
+      ? "record"
+      : mission.status === "waiting-authorization" || mission.status === "waiting-executor"
         ? "request_analysis"
         : "ignore";
 
@@ -82,27 +82,16 @@ export class SpecTRLOctopusAdapter {
         },
         body: JSON.stringify({
           operationId: `spectrl_${event.id}`,
-          title: `Analyser une observation spectrale ${event.type}`,
-          objective: "Évaluer une observation spectrale et proposer une action utile sans modifier ni bloquer SpecTRL.",
+          title: `Recevoir une observation spectrale ${event.type}`,
+          objective: "Recevoir, horodater et enregistrer une observation sans interprétation métier.",
           context: {
             id: `spectrl:${event.id}`,
             label: event.payload.metadata?.signatureName ?? event.type,
-            objective: typeof event.payload.metadata?.translation === "string"
-              ? event.payload.metadata.translation
-              : "Interpréter une observation spectrale.",
+            objective: "Conserver cet influx spectral pour son historique et de futures comparaisons.",
             metadata: { source: "spectrl", event },
           },
-          requiredCapabilities: ["observation.analyze"],
+          requiredCapabilities: ["observation.receive"],
           authorizedResources: [],
-          prompt: [
-            "Analyse cette observation spectrale.",
-            "Réponds avec decision, reason et actions.",
-            "decision doit être ignore, record, enrich ou request_analysis.",
-            `Type : ${event.type}`,
-            `Confiance : ${event.payload.confidence ?? "non précisée"}`,
-            `Fréquence dominante : ${event.payload.frequencyPeakHz ?? "non précisée"}`,
-            `Lieu : ${event.payload.locationLabel ?? "non précisé"}`,
-          ].join("\n"),
         }),
         signal: controller.signal,
       });
