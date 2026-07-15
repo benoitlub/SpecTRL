@@ -1,5 +1,6 @@
 import type { AnalysisState, AudioFeatures } from "../data/animals";
 import { createSpecTRLOctopusAdapter } from "../integrations/octopus";
+import { monitorStateFromResult, publishOctopusMonitor } from "../integrations/octopus/monitor";
 
 const STORAGE_KEY = "spectrl-session-journal-v1";
 const MAX_ENTRIES = 30;
@@ -72,8 +73,11 @@ function emitObservation(entry: SpectralJournalEntry): void {
     },
   });
 
+  publishOctopusMonitor({ status: "sending", eventType: event.type, message: "Mission envoyée à Octopus" });
+
   // Intentionally detached: Octopus must never delay or break SpecTRL.
   void octopusAdapter.emit(event).then(result => {
+    publishOctopusMonitor(monitorStateFromResult(event.type, result));
     if (import.meta.env.DEV && result.status === "failed") {
       console.debug("[SpecTRL Octopus adapter] Observation not delivered", result.error);
     }
