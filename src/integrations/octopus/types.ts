@@ -1,3 +1,5 @@
+import type { OctopusDiagnostic } from "./OctopusClient";
+
 export type SpectrlEventType =
   | "audio.detected"
   | "audio.classified"
@@ -22,12 +24,7 @@ export interface SpectrlOctopusEvent {
   payload: SpectrlObservationContext;
 }
 
-export type OctopusDecisionKind =
-  | "ignore"
-  | "record"
-  | "enrich"
-  | "request_analysis"
-  | string;
+export type OctopusDecisionKind = "ignore" | "record" | "enrich" | "request_analysis" | string;
 
 export interface OctopusDecision {
   id?: string;
@@ -39,9 +36,11 @@ export interface OctopusDecision {
 
 export interface OctopusMissionResponse {
   status?: string;
+  code?: string;
   summary?: string;
   output?: Record<string, unknown>;
   operationId?: string;
+  missionId?: string;
   contextId?: string;
 }
 
@@ -54,5 +53,5 @@ export interface OctopusAdapterConfig {
 
 export type OctopusAdapterResult =
   | { status: "disabled" }
-  | { status: "delivered"; decision: OctopusDecision; mission: OctopusMissionResponse; latencyMs: number }
-  | { status: "failed"; error: Error; latencyMs: number };
+  | { status: "delivered"; decision: OctopusDecision; mission: OctopusMissionResponse; latencyMs: number; diagnostic: OctopusDiagnostic }
+  | { status: "failed"; error: Error; latencyMs: number; diagnostic: OctopusDiagnostic };
