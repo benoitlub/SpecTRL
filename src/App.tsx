@@ -1,6 +1,7 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
+import { OctopusMonitor } from "@/components/OctopusMonitor";
 
 function Router() {
   return (
@@ -15,6 +16,7 @@ function App() {
   return (
     <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
       <Router />
+      <OctopusMonitor />
     </WouterRouter>
   );
 }
