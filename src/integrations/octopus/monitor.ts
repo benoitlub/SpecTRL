@@ -8,6 +8,11 @@ export type OctopusMonitorState = {
   decision?: string;
   latencyMs?: number;
   message?: string;
+  endpoint?: string;
+  httpStatus?: number;
+  responseStatus?: string;
+  responseCode?: string;
+  networkError?: string;
   updatedAt: string;
 };
 
@@ -23,17 +28,28 @@ export function monitorStateFromResult(
   result: OctopusAdapterResult,
 ): Omit<OctopusMonitorState, "updatedAt"> {
   if (result.status === "disabled") return { status: "disabled", eventType, message: "Adaptateur désactivé" };
+
+  const diagnostic = result.diagnostic;
+  const common = {
+    eventType,
+    latencyMs: result.latencyMs,
+    endpoint: diagnostic.endpoint,
+    httpStatus: diagnostic.httpStatus,
+    responseStatus: diagnostic.responseStatus,
+    responseCode: diagnostic.responseCode,
+    networkError: diagnostic.networkError,
+  };
+
   if (result.status === "failed") return {
     status: "failed",
-    eventType,
-    latencyMs: result.latencyMs,
-    message: result.error.message,
+    ...common,
+    message: diagnostic.summary ?? diagnostic.networkError ?? result.error.message,
   };
+
   return {
     status: "delivered",
-    eventType,
+    ...common,
     decision: result.decision.decision,
-    latencyMs: result.latencyMs,
-    message: result.decision.reason,
+    message: result.decision.reason ?? diagnostic.summary,
   };
 }
