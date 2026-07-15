@@ -27,10 +27,14 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
     : undefined;
 }
 
+function defaultFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  return globalThis.fetch(input, init);
+}
+
 export class OctopusClient {
   constructor(
     private readonly config: OctopusClientConfig,
-    private readonly fetchImpl: typeof fetch = fetch,
+    private readonly fetchImpl: typeof fetch = defaultFetch,
   ) {}
 
   async sendMission<T>(mission: Record<string, unknown>): Promise<OctopusClientResult<T>> {
