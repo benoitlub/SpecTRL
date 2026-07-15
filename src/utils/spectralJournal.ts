@@ -1,7 +1,9 @@
 import type { AnalysisState, AudioFeatures } from "../data/animals";
+import { createSpecTRLOctopusAdapter } from "../integrations/octopus";
 
 const STORAGE_KEY = "spectrl-session-journal-v1";
 const MAX_ENTRIES = 30;
+const octopusAdapter = createSpecTRLOctopusAdapter();
 
 export type SpectralJournalEntry = {
   id: string;
@@ -52,6 +54,32 @@ function write(entries: SpectralJournalEntry[]) {
   return next;
 }
 
+function emitObservation(entry: SpectralJournalEntry): void {
+  const event = octopusAdapter.createEvent("observation.created", {
+    sessionId: entry.id,
+    locationLabel: entry.locationNote || entry.habitat,
+    confidence: entry.confidence,
+    frequencyPeakHz: entry.metrics.dominantFreq,
+    tags: [entry.signatureName, entry.anomalyLevel, entry.emotionalState].filter(Boolean),
+    metadata: {
+      translation: entry.translation,
+      habitat: entry.habitat,
+      residualIntent: entry.residualIntent,
+      spectralCentroid: entry.metrics.spectralCentroid,
+      rms: entry.metrics.rms,
+      resonance: entry.metrics.resonance,
+      clarity: entry.metrics.clarity,
+    },
+  });
+
+  // Intentionally detached: Octopus must never delay or break SpecTRL.
+  void octopusAdapter.emit(event).then(result => {
+    if (import.meta.env.DEV && result.status === "failed") {
+      console.debug("[SpecTRL Octopus adapter] Observation not delivered", result.error);
+    }
+  });
+}
+
 export function getSpectralJournal() {
   return read();
 }
@@ -96,5 +124,7 @@ export function createSpectralJournalEntry(state: AnalysisState, audioFeatures: 
 export function saveSpectralJournalEntry(entry: SpectralJournalEntry) {
   const current = read();
   const withoutDuplicate = current.filter(item => item.translation !== entry.translation || item.createdAt !== entry.createdAt);
-  return write([entry, ...withoutDuplicate]);
+  const saved = write([entry, ...withoutDuplicate]);
+  emitObservation(entry);
+  return saved;
 }
