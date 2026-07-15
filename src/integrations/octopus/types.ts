@@ -37,6 +37,14 @@ export interface OctopusDecision {
   metadata?: Record<string, unknown>;
 }
 
+export interface OctopusMissionResponse {
+  status?: string;
+  summary?: string;
+  output?: Record<string, unknown>;
+  operationId?: string;
+  contextId?: string;
+}
+
 export interface OctopusAdapterConfig {
   enabled: boolean;
   endpoint?: string;
@@ -46,5 +54,5 @@ export interface OctopusAdapterConfig {
 
 export type OctopusAdapterResult =
   | { status: "disabled" }
-  | { status: "delivered"; decision: OctopusDecision; latencyMs: number }
+  | { status: "delivered"; decision: OctopusDecision; mission: OctopusMissionResponse; latencyMs: number }
   | { status: "failed"; error: Error; latencyMs: number };
