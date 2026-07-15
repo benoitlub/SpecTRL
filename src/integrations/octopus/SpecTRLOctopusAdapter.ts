@@ -31,6 +31,12 @@ function inferDecision(mission: OctopusMissionResponse): OctopusDecision {
   };
 }
 
+async function responseError(response: Response): Promise<Error> {
+  const body = await response.text().catch(() => "");
+  const detail = body.trim().slice(0, 240);
+  return new Error(`Octopus mission failed (${response.status})${detail ? `: ${detail}` : ""}`);
+}
+
 export class SpecTRLOctopusAdapter {
   constructor(
     private readonly config: OctopusAdapterConfig,
@@ -76,8 +82,8 @@ export class SpecTRLOctopusAdapter {
         },
         body: JSON.stringify({
           operationId: `spectrl_${event.id}`,
-          title: `Analyser une observation spectrale ${event.type}`,
-          objective: "Évaluer une observation spectrale et proposer une action utile sans modifier ni bloquer SpecTRL.",
+          title: `Qualifier une observation spectrale ${event.type}`,
+          objective: "Qualifier brièvement une observation spectrale et indiquer si une analyse complémentaire est utile.",
           context: {
             id: `spectrl:${event.id}`,
             label: event.payload.metadata?.signatureName ?? event.type,
@@ -86,12 +92,13 @@ export class SpecTRLOctopusAdapter {
               : "Interpréter une observation spectrale.",
             metadata: { source: "spectrl", event },
           },
-          requiredCapabilities: ["observation.analyze"],
+          // Octopus currently exposes copy.generate. No Mistral authorization is granted here:
+          // a waiting-authorization response is enough to prove the neutral mission path works.
+          requiredCapabilities: ["copy.generate"],
           authorizedResources: [],
           prompt: [
-            "Analyse cette observation spectrale.",
-            "Réponds avec un objet JSON contenant decision, reason et actions.",
-            "decision doit être ignore, record, enrich ou request_analysis.",
+            "Résume cette observation spectrale en une phrase factuelle.",
+            "N'exécute aucune action externe sans autorisation.",
             `Type : ${event.type}`,
             `Confiance : ${event.payload.confidence ?? "non précisée"}`,
             `Fréquence dominante : ${event.payload.frequencyPeakHz ?? "non précisée"}`,
@@ -102,7 +109,7 @@ export class SpecTRLOctopusAdapter {
       });
 
       if (!response.ok) {
-        throw new Error(`Octopus mission failed (${response.status})`);
+        throw await responseError(response);
       }
 
       const mission = await response.json() as OctopusMissionResponse;
