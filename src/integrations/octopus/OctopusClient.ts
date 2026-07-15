@@ -77,7 +77,8 @@ export class OctopusClient {
       };
 
       if (!response.ok) {
-        const detail = diagnostic.summary ?? raw.trim().slice(0, 240) || `HTTP ${response.status}`;
+        const rawDetail = raw.trim().slice(0, 240);
+        const detail = diagnostic.summary ?? (rawDetail || `HTTP ${response.status}`);
         return { ok: false, error: new Error(detail), diagnostic };
       }
 
