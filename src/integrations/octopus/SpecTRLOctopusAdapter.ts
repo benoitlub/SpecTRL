@@ -1,3 +1,4 @@
+import { OctopusClient } from "./OctopusClient";
 import type {
   OctopusAdapterConfig,
   OctopusAdapterResult,
@@ -7,8 +8,6 @@ import type {
   SpectrlObservationContext,
   SpectrlEventType,
 } from "./types";
-
-const DEFAULT_TIMEOUT_MS = 2500;
 
 function inferDecision(mission: OctopusMissionResponse): OctopusDecision {
   const output = mission.output ?? {};
@@ -29,12 +28,6 @@ function inferDecision(mission: OctopusMissionResponse): OctopusDecision {
       : [],
     metadata: { missionStatus: mission.status, contextId: mission.contextId, output },
   };
-}
-
-async function responseError(response: Response): Promise<Error> {
-  const body = await response.text().catch(() => "");
-  const detail = body.trim().slice(0, 240);
-  return new Error(`Octopus mission failed (${response.status})${detail ? `: ${detail}` : ""}`);
 }
 
 export class SpecTRLOctopusAdapter {
@@ -65,58 +58,42 @@ export class SpecTRLOctopusAdapter {
       return { status: "disabled" };
     }
 
-    const startedAt = performance.now();
-    const controller = new AbortController();
-    const timeoutId = globalThis.setTimeout(
-      () => controller.abort(),
-      this.config.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-    );
+    const client = new OctopusClient({
+      endpoint: this.config.endpoint!,
+      timeoutMs: this.config.timeoutMs,
+      headers: this.config.headers,
+    }, this.fetchImpl);
 
-    try {
-      const endpoint = `${this.config.endpoint!.replace(/\/$/, "")}/mission`;
-      const response = await this.fetchImpl(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...this.config.headers,
-        },
-        body: JSON.stringify({
-          operationId: `spectrl_${event.id}`,
-          title: `Recevoir une observation spectrale ${event.type}`,
-          objective: "Recevoir, horodater et enregistrer une observation sans interprétation métier.",
-          context: {
-            id: `spectrl:${event.id}`,
-            label: event.payload.metadata?.signatureName ?? event.type,
-            objective: "Conserver cet influx spectral pour son historique et de futures comparaisons.",
-            metadata: { source: "spectrl", event },
-          },
-          requiredCapabilities: ["observation.receive"],
-          authorizedResources: [],
-        }),
-        signal: controller.signal,
-      });
+    const result = await client.sendMission<OctopusMissionResponse>({
+      operationId: `spectrl_${event.id}`,
+      title: `Recevoir une observation spectrale ${event.type}`,
+      objective: "Recevoir, horodater et enregistrer une observation sans interprétation métier.",
+      context: {
+        id: `spectrl:${event.id}`,
+        label: event.payload.metadata?.signatureName ?? event.type,
+        objective: "Conserver cet influx spectral pour son historique et de futures comparaisons.",
+        metadata: { source: "spectrl", event },
+      },
+      requiredCapabilities: ["observation.receive"],
+      authorizedResources: [],
+    });
 
-      if (!response.ok) {
-        throw await responseError(response);
-      }
-
-      const mission = await response.json() as OctopusMissionResponse;
-      return {
-        status: "delivered",
-        decision: inferDecision(mission),
-        mission,
-        latencyMs: Math.round(performance.now() - startedAt),
-      };
-    } catch (cause) {
-      const error = cause instanceof Error ? cause : new Error(String(cause));
+    if (!result.ok) {
       return {
         status: "failed",
-        error,
-        latencyMs: Math.round(performance.now() - startedAt),
+        error: result.error,
+        latencyMs: result.diagnostic.latencyMs,
+        diagnostic: result.diagnostic,
       };
-    } finally {
-      globalThis.clearTimeout(timeoutId);
     }
+
+    return {
+      status: "delivered",
+      decision: inferDecision(result.data),
+      mission: result.data,
+      latencyMs: result.diagnostic.latencyMs,
+      diagnostic: result.diagnostic,
+    };
   }
 
   private fallbackId(): string {
