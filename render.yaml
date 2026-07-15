@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: spectrl-octopus-adapter
+    runtime: node
+    plan: free
+    autoDeploy: true
+    buildCommand: ""
+    startCommand: node adapter-server/server.mjs
+    healthCheckPath: /health
+    envVars:
+      - key: OCTOPUS_URL
+        value: https://octopus-engine.onrender.com
