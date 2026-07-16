@@ -1,11 +1,13 @@
 import type { AnalysisState, AudioFeatures } from "../data/animals";
 import { createSpecTRLOctopusAdapter } from "../integrations/octopus";
 import { enrichDetection, type DetectionEnrichment } from "../integrations/octopus/detectionEnrichment";
+import { readUniversalKnowledge, translateUniversalKnowledge, type SpectrlKnowledgeInsight } from "../integrations/octopus/knowledgeTranslator";
 import { monitorStateFromResult, publishOctopusMonitor } from "../integrations/octopus/monitor";
 
 const STORAGE_KEY = "spectrl-session-journal-v1";
 const MAX_ENTRIES = 30;
 const octopusAdapter = createSpecTRLOctopusAdapter();
+export const SPECTRAL_ENTRY_UPDATED_EVENT = "spectrl:entry-updated";
 
 export type SpectralJournalEntry = {
   id: string;
@@ -21,6 +23,7 @@ export type SpectralJournalEntry = {
   locationNote: string;
   userNotes: string;
   enrichment?: DetectionEnrichment;
+  octopusInsight?: SpectrlKnowledgeInsight;
   metrics: {
     dominantFreq?: number;
     spectralCentroid?: number;
@@ -57,6 +60,11 @@ function write(entries: SpectralJournalEntry[]) {
   return next;
 }
 
+function publishEntryUpdate(entry: SpectralJournalEntry): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent<SpectralJournalEntry>(SPECTRAL_ENTRY_UPDATED_EVENT, { detail: entry }));
+}
+
 function emitObservation(entry: SpectralJournalEntry): void {
   const event = octopusAdapter.createEvent("observation.created", {
     sessionId: entry.id,
@@ -70,6 +78,7 @@ function emitObservation(entry: SpectralJournalEntry): void {
       ...(entry.enrichment?.contextTags ?? []),
     ].filter(Boolean),
     metadata: {
+      signatureName: entry.signatureName,
       translation: entry.translation,
       habitat: entry.habitat,
       residualIntent: entry.residualIntent,
@@ -92,6 +101,21 @@ function emitObservation(entry: SpectralJournalEntry): void {
   // Intentionally detached: Octopus must never delay or break SpecTRL.
   void octopusAdapter.emit(event).then(result => {
     const monitor = monitorStateFromResult(event.type, result);
+    if (result.status === "delivered") {
+      const knowledge = readUniversalKnowledge(result.mission.output);
+      if (knowledge) {
+        const octopusInsight = translateUniversalKnowledge(knowledge);
+        const updatedEntry: SpectralJournalEntry = { ...entry, octopusInsight };
+        write(read().map(item => item.id === entry.id ? updatedEntry : item));
+        publishEntryUpdate(updatedEntry);
+        publishOctopusMonitor({
+          ...monitor,
+          message: `${octopusInsight.message.fr} · Cohérence ${octopusInsight.coherenceScore}% · Nouveauté ${octopusInsight.noveltyScore}%`,
+        });
+        return;
+      }
+    }
+
     publishOctopusMonitor({
       ...monitor,
       message: result.status === "delivered" && entry.enrichment
