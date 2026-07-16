@@ -1,5 +1,6 @@
 import type { AnalysisState, AudioFeatures } from "../data/animals";
 import { createSpecTRLOctopusAdapter } from "../integrations/octopus";
+import { enrichDetection, type DetectionEnrichment } from "../integrations/octopus/detectionEnrichment";
 import { monitorStateFromResult, publishOctopusMonitor } from "../integrations/octopus/monitor";
 
 const STORAGE_KEY = "spectrl-session-journal-v1";
@@ -19,6 +20,7 @@ export type SpectralJournalEntry = {
   favorite: boolean;
   locationNote: string;
   userNotes: string;
+  enrichment?: DetectionEnrichment;
   metrics: {
     dominantFreq?: number;
     spectralCentroid?: number;
@@ -61,7 +63,12 @@ function emitObservation(entry: SpectralJournalEntry): void {
     locationLabel: entry.locationNote || entry.habitat,
     confidence: entry.confidence,
     frequencyPeakHz: entry.metrics.dominantFreq,
-    tags: [entry.signatureName, entry.anomalyLevel, entry.emotionalState].filter(Boolean),
+    tags: [
+      entry.signatureName,
+      entry.anomalyLevel,
+      entry.emotionalState,
+      ...(entry.enrichment?.contextTags ?? []),
+    ].filter(Boolean),
     metadata: {
       translation: entry.translation,
       habitat: entry.habitat,
@@ -70,14 +77,27 @@ function emitObservation(entry: SpectralJournalEntry): void {
       rms: entry.metrics.rms,
       resonance: entry.metrics.resonance,
       clarity: entry.metrics.clarity,
+      enrichment: entry.enrichment,
     },
   });
 
-  publishOctopusMonitor({ status: "sending", eventType: event.type, message: "Mission envoyée à Octopus" });
+  publishOctopusMonitor({
+    status: "sending",
+    eventType: event.type,
+    message: entry.enrichment
+      ? `Enrichissement : ${entry.enrichment.summary}`
+      : "Mission envoyée à Octopus",
+  });
 
   // Intentionally detached: Octopus must never delay or break SpecTRL.
   void octopusAdapter.emit(event).then(result => {
-    publishOctopusMonitor(monitorStateFromResult(event.type, result));
+    const monitor = monitorStateFromResult(event.type, result);
+    publishOctopusMonitor({
+      ...monitor,
+      message: result.status === "delivered" && entry.enrichment
+        ? `${monitor.message ?? "Observation enregistrée"} · ${entry.enrichment.summary}`
+        : monitor.message,
+    });
     if (import.meta.env.DEV && result.status === "failed") {
       console.debug("[SpecTRL Octopus adapter] Observation not delivered", result.error);
     }
@@ -128,7 +148,11 @@ export function createSpectralJournalEntry(state: AnalysisState, audioFeatures: 
 export function saveSpectralJournalEntry(entry: SpectralJournalEntry) {
   const current = read();
   const withoutDuplicate = current.filter(item => item.translation !== entry.translation || item.createdAt !== entry.createdAt);
-  const saved = write([entry, ...withoutDuplicate]);
-  emitObservation(entry);
+  const enrichedEntry: SpectralJournalEntry = {
+    ...entry,
+    enrichment: enrichDetection(entry, withoutDuplicate),
+  };
+  const saved = write([enrichedEntry, ...withoutDuplicate]);
+  emitObservation(enrichedEntry);
   return saved;
 }
