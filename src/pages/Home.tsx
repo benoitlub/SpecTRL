@@ -8,14 +8,14 @@ import { SpectralJournal } from "../components/SpectralJournal";
 import { SpeciesPanel, SignalQualityPanel, NeuralPanel } from "../components/AnalysisPanels";
 import { CaptureWitnessPanel } from "../components/CaptureWitnessPanel";
 import { type Lang } from "../data/animals";
-import { createSpectralJournalEntry, saveSpectralJournalEntry, type SpectralJournalEntry } from "../utils/spectralJournal";
+import { createSpectralJournalEntry, saveSpectralJournalEntry, SPECTRAL_ENTRY_UPDATED_EVENT, type SpectralJournalEntry } from "../utils/spectralJournal";
 
 const PAYPAL_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=benoitlubert@gmail.com&currency_code=EUR&item_name=Support+SpecTRL";
 
 const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: string; journal: string; support: string; journalTitle: string; footer: string }> = {
-  fr: { actions: "Actions", share: "Partager", hideJournal: "Masquer journal", journal: "Journal", support: "Soutenir", journalTitle: "Journal spectral compact", footer: "Feuch Institute // SpecTRL v1.1 COMPACT SILENCE // protocole compact // son modulable" },
-  en: { actions: "Actions", share: "Share", hideJournal: "Hide journal", journal: "Journal", support: "Support", journalTitle: "Compact spectral journal", footer: "Feuch Institute // SpecTRL v1.1 COMPACT SILENCE // compact protocol // sound control" },
-  es: { actions: "Acciones", share: "Compartir", hideJournal: "Ocultar diario", journal: "Diario", support: "Apoyar", journalTitle: "Diario espectral compacto", footer: "Feuch Institute // SpecTRL v1.1 COMPACT SILENCE // protocolo compacto // sonido ajustable" },
+  fr: { actions: "Actions", share: "Partager", hideJournal: "Masquer journal", journal: "Journal", support: "Soutenir", journalTitle: "Journal spectral compact", footer: "Feuch Institute // SpecTRL v1.4 // protocole Octopus universel" },
+  en: { actions: "Actions", share: "Share", hideJournal: "Hide journal", journal: "Journal", support: "Support", journalTitle: "Compact spectral journal", footer: "Feuch Institute // SpecTRL v1.4 // universal Octopus protocol" },
+  es: { actions: "Acciones", share: "Compartir", hideJournal: "Ocultar diario", journal: "Diario", support: "Apoyar", journalTitle: "Diario espectral compacto", footer: "Feuch Institute // SpecTRL v1.4 // protocolo Octopus universal" },
 };
 
 function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }) {
@@ -26,7 +26,7 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-2">
               <h1 className="font-mono text-xl font-black tracking-[0.10em] text-cyan-200 sm:text-2xl">SpecTRL</h1>
-              <span className="rounded border border-purple-300/25 px-1.5 py-0.5 text-[7px] font-mono uppercase tracking-[0.18em] text-purple-100/75">v1.3.1</span>
+              <span className="rounded border border-purple-300/25 px-1.5 py-0.5 text-[7px] font-mono uppercase tracking-[0.18em] text-purple-100/75">v1.4</span>
             </div>
             <div className="mt-0.5 truncate text-[7px] font-mono uppercase tracking-[0.20em] text-orange-300/62 sm:text-[8px]">Feuch Institute // Marty logger</div>
           </div>
@@ -102,6 +102,15 @@ export default function Home() {
       window.removeEventListener("deviceorientation", onOrientation);
       window.clearInterval(decay);
     };
+  }, []);
+
+  useEffect(() => {
+    const onEntryUpdated = (event: Event) => {
+      const entry = (event as CustomEvent<SpectralJournalEntry>).detail;
+      if (entry) setLatestEntry(entry);
+    };
+    window.addEventListener(SPECTRAL_ENTRY_UPDATED_EVENT, onEntryUpdated);
+    return () => window.removeEventListener(SPECTRAL_ENTRY_UPDATED_EVENT, onEntryUpdated);
   }, []);
 
   useEffect(() => {
