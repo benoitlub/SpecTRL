@@ -13,9 +13,9 @@ type Props = {
 };
 
 const COPY = {
-  fr: { title: "Captation", mic: "Micro", noise: "Fond", spectrum: "Spectre", motion: "Mouvement", archive: "Archives", octopus: "Octopus", fingerprint: "Empreinte", capture: "Capture", compare: "Comparaison", transmit: "Transmission", recorded: "Archivée" },
-  en: { title: "Capture", mic: "Microphone", noise: "Noise", spectrum: "Spectrum", motion: "Motion", archive: "Archive", octopus: "Octopus", fingerprint: "Fingerprint", capture: "Capture", compare: "Compare", transmit: "Transmit", recorded: "Recorded" },
-  es: { title: "Captura", mic: "Micrófono", noise: "Fondo", spectrum: "Espectro", motion: "Movimiento", archive: "Archivo", octopus: "Octopus", fingerprint: "Huella", capture: "Captura", compare: "Comparación", transmit: "Transmisión", recorded: "Archivada" },
+  fr: { title: "Captation", mic: "Micro", noise: "Fond", spectrum: "Spectre", motion: "Mouvement", archive: "Archives", octopus: "Octopus", fingerprint: "Empreinte", capture: "Capture", compare: "Comparaison", transmit: "Transmission", recorded: "Archivée", coherence: "Cohérence", novelty: "Nouveauté", waiting: "Mémoire Octopus en attente" },
+  en: { title: "Capture", mic: "Microphone", noise: "Noise", spectrum: "Spectrum", motion: "Motion", archive: "Archive", octopus: "Octopus", fingerprint: "Fingerprint", capture: "Capture", compare: "Compare", transmit: "Transmit", recorded: "Recorded", coherence: "Coherence", novelty: "Novelty", waiting: "Waiting for Octopus memory" },
+  es: { title: "Captura", mic: "Micrófono", noise: "Fondo", spectrum: "Espectro", motion: "Movimiento", archive: "Archivo", octopus: "Octopus", fingerprint: "Huella", capture: "Captura", compare: "Comparación", transmit: "Transmisión", recorded: "Archivada", coherence: "Coherencia", novelty: "Novedad", waiting: "Esperando la memoria de Octopus" },
 } satisfies Record<Lang, Record<string, string>>;
 
 function clamp(value: number) {
@@ -43,13 +43,14 @@ export function CaptureWitnessPanel({ lang, active, complete, progress, micPermi
   const noise = clamp((audioFeatures?.flatness ?? 0) * 1.25);
   const spectrum = clamp((audioFeatures?.spectralCentroid ?? 0) / 6000);
   const recurrence = latestEntry?.enrichment?.recurrenceCount ?? 0;
+  const insight = latestEntry?.octopusInsight;
   const bars = fingerprint(latestEntry, audioFeatures);
   const stages = [
     { label: copy.capture, done: active || complete },
     { label: copy.spectrum, done: progress >= 35 || complete },
-    { label: copy.compare, done: progress >= 68 || complete },
+    { label: copy.compare, done: Boolean(insight) || progress >= 68 || complete },
     { label: copy.transmit, done: complete },
-    { label: copy.recorded, done: complete },
+    { label: copy.recorded, done: Boolean(insight) },
   ];
 
   const sensors = [
@@ -57,8 +58,8 @@ export function CaptureWitnessPanel({ lang, active, complete, progress, micPermi
     [copy.noise, `${Math.round(noise * 100)}%`, noise],
     [copy.spectrum, audioFeatures?.dominantFreq ? `${Math.round(audioFeatures.dominantFreq)} Hz` : "—", spectrum],
     [copy.motion, `${Math.round(motionLevel * 100)}%`, motionLevel],
-    [copy.archive, latestEntry?.enrichment ? `${recurrence}×` : "—", clamp((recurrence + 1) / 8)],
-    [copy.octopus, complete ? "REC" : active && progress > 82 ? "TX" : "—", complete ? 1 : active && progress > 82 ? 0.65 : 0],
+    [copy.archive, insight ? `${insight.relatedCount}×` : latestEntry?.enrichment ? `${recurrence}×` : "—", insight ? clamp(insight.relatedCount / 8) : clamp((recurrence + 1) / 8)],
+    [copy.octopus, insight ? "MEM" : complete ? "REC" : active && progress > 82 ? "TX" : "—", insight ? 1 : complete ? 0.8 : active && progress > 82 ? 0.65 : 0],
   ] as const;
 
   return (
@@ -90,6 +91,17 @@ export function CaptureWitnessPanel({ lang, active, complete, progress, micPermi
           {bars.map((height, index) => <span key={index} className="min-w-0 flex-1 rounded-t-sm bg-cyan-300/45" style={{ height: `${height}%`, opacity: 0.35 + (index % 5) * 0.1 }} />)}
         </div>
       </div>
+
+      {complete && (
+        <div className="mt-2 grid grid-cols-[auto_1fr_auto] items-center gap-2 border-t border-white/7 pt-2 font-mono">
+          <div className="text-[7px] uppercase tracking-[0.12em] text-white/38">
+            <div>{copy.coherence} <span className="text-cyan-100">{insight?.coherenceScore ?? "—"}%</span></div>
+            <div>{copy.novelty} <span className="text-purple-100">{insight?.noveltyScore ?? "—"}%</span></div>
+          </div>
+          <div className="h-1 overflow-hidden rounded-full bg-white/8"><div className="h-full rounded-full bg-cyan-300/75 transition-all duration-500" style={{ width: `${insight?.coherenceScore ?? 0}%` }} /></div>
+          <div className="max-w-[13rem] text-right text-[8px] leading-relaxed text-cyan-100/72">{insight?.message[lang] ?? copy.waiting}</div>
+        </div>
+      )}
     </section>
   );
 }
