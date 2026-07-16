@@ -6,6 +6,7 @@ import { TranslationCard } from "../components/TranslationCard";
 import { SensorScreensV3 } from "../components/SensorScreensV3";
 import { SpectralJournal } from "../components/SpectralJournal";
 import { SpeciesPanel, SignalQualityPanel, NeuralPanel } from "../components/AnalysisPanels";
+import { CaptureWitnessPanel } from "../components/CaptureWitnessPanel";
 import { type Lang } from "../data/animals";
 import { createSpectralJournalEntry, saveSpectralJournalEntry, type SpectralJournalEntry } from "../utils/spectralJournal";
 
@@ -49,7 +50,7 @@ function Header({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) => void }
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-2">
               <h1 className="font-mono text-xl font-black tracking-[0.10em] text-cyan-200 sm:text-2xl">SpecTRL</h1>
-              <span className="rounded border border-purple-300/25 px-1.5 py-0.5 text-[7px] font-mono uppercase tracking-[0.18em] text-purple-100/75">v1.2</span>
+              <span className="rounded border border-purple-300/25 px-1.5 py-0.5 text-[7px] font-mono uppercase tracking-[0.18em] text-purple-100/75">v1.3</span>
             </div>
             <div className="mt-0.5 truncate text-[7px] font-mono uppercase tracking-[0.20em] text-orange-300/62 sm:text-[8px]">Feuch Institute // Marty logger</div>
           </div>
@@ -157,8 +158,8 @@ export default function Home() {
     if (savedKey.current === key) return;
     const entry = createSpectralJournalEntry(state, currentFeatures);
     if (!entry) return;
-    saveSpectralJournalEntry(entry);
-    setLatestEntry(entry);
+    const saved = saveSpectralJournalEntry(entry);
+    setLatestEntry(saved[0] ?? entry);
     setShowJournal(true);
     savedKey.current = key;
   }, [state, currentFeatures]);
@@ -183,6 +184,17 @@ export default function Home() {
           <SpeciesPanel state={state} lang={lang} />
           <SensorScreensV3 radarOnly compact active={active} audioFeatures={currentFeatures} progress={state.scanProgress} detectedLabel={detectedLabel || state.detectedSpecies} />
         </div>
+
+        <CaptureWitnessPanel
+          lang={lang}
+          active={active}
+          complete={state.isComplete}
+          progress={state.scanProgress}
+          micPermission={micPermission}
+          motionLevel={motionLevel}
+          audioFeatures={currentFeatures}
+          latestEntry={latestEntry}
+        />
 
         <div className="space-y-3">
           <TranslationCard state={state} lang={lang} />
