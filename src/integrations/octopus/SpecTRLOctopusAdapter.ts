@@ -33,7 +33,7 @@ function inferDecision(mission: OctopusMissionResponse): OctopusDecision {
 export class SpecTRLOctopusAdapter {
   constructor(
     private readonly config: OctopusAdapterConfig,
-    private readonly fetchImpl: typeof fetch = fetch,
+    private readonly fetchImpl?: typeof fetch,
   ) {}
 
   isEnabled(): boolean {
@@ -58,11 +58,14 @@ export class SpecTRLOctopusAdapter {
       return { status: "disabled" };
     }
 
-    const client = new OctopusClient({
+    const clientConfig = {
       endpoint: this.config.endpoint!,
       timeoutMs: this.config.timeoutMs,
       headers: this.config.headers,
-    }, this.fetchImpl);
+    };
+    const client = this.fetchImpl
+      ? new OctopusClient(clientConfig, this.fetchImpl)
+      : new OctopusClient(clientConfig);
 
     const result = await client.sendMission<OctopusMissionResponse>({
       operationId: `spectrl_${event.id}`,
