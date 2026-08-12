@@ -1,6 +1,6 @@
 import { SpecTRLOctopusAdapter } from "./SpecTRLOctopusAdapter";
 
-const DEFAULT_OCTOPUS_ENDPOINT = "https://octopus-engine.onrender.com";
+const DEFAULT_OCTOPUS_ENDPOINT = "https://octopus-engine-app.benoitlubert.workers.dev";
 const DEFAULT_PRODUCTION_TIMEOUT_MS = 30_000;
 
 const parseBoolean = (value: string | undefined, fallback = false): boolean => {
