@@ -1,6 +1,6 @@
 import { SpecTRLOctopusAdapter } from "./SpecTRLOctopusAdapter";
 
-const DEFAULT_OCTOPUS_ENDPOINT = "https://octopus-engine.onrender.com";
+const DEFAULT_OCTOPUS_ENDPOINT = "https://octopus-engine-app.benoitlubert.workers.dev";
 const DEFAULT_PRODUCTION_TIMEOUT_MS = 30_000;
 
 const parseBoolean = (value: string | undefined, fallback = false): boolean => {
@@ -17,8 +17,7 @@ const parseTimeout = (value: string | undefined): number | undefined => {
 function wakeOctopus(endpoint: string): void {
   if (typeof window === "undefined") return;
 
-  // Render instances may be asleep. Wake the neutral health endpoint early,
-  // without blocking SpecTRL or changing the monitor state for a real mission.
+  // Check the neutral health endpoint without blocking capture or changing mission status.
   void fetch(`${endpoint.replace(/\/$/, "")}/health`, {
     method: "GET",
     mode: "cors",
