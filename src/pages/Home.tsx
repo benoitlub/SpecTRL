@@ -10,7 +10,7 @@ import { CaptureWitnessPanel } from "../components/CaptureWitnessPanel";
 import { type Lang } from "../data/animals";
 import { createSpectralJournalEntry, saveSpectralJournalEntry, SPECTRAL_ENTRY_UPDATED_EVENT, type SpectralJournalEntry } from "../utils/spectralJournal";
 
-const PAYPAL_URL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=benoitlubert@gmail.com&currency_code=EUR&item_name=Support+SpecTRL";
+const KOFI_URL = "https://ko-fi.com/feuchinstitut";
 
 const ACTION_COPY: Record<Lang, { actions: string; share: string; hideJournal: string; journal: string; support: string; journalTitle: string; footer: string }> = {
   fr: { actions: "Actions", share: "Partager", hideJournal: "Masquer journal", journal: "Journal", support: "Soutenir", journalTitle: "Journal spectral compact", footer: "Feuch Institute // SpecTRL v1.4 // protocole Octopus universel" },
@@ -65,7 +65,7 @@ function ActionPanel({ lang, showJournal, setShowJournal, latestEntry }: { lang:
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <button type="button" onClick={handleShare} className="rounded border border-cyan-300/35 bg-cyan-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-cyan-100">{copy.share}</button>
         <button type="button" onClick={() => setShowJournal(!showJournal)} className="rounded border border-purple-300/35 bg-purple-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-purple-100">{showJournal ? copy.hideJournal : copy.journal}</button>
-        <button type="button" onClick={() => window.open(PAYPAL_URL, "_blank", "noopener,noreferrer")} className="rounded border border-orange-300/40 bg-orange-300/10 px-3 py-2 text-[10px] font-mono uppercase tracking-[0.16em] text-orange-100">{copy.support}</button>
+        <a href={KOFI_URL} target="_blank" rel="noopener noreferrer" className="rounded border border-orange-300/40 bg-orange-300/10 px-3 py-2 text-center text-[10px] font-mono uppercase tracking-[0.16em] text-orange-100">☕ Ko-fi · {copy.support}</a>
       </div>
     </div>
   );
