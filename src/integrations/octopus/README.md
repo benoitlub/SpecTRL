@@ -6,14 +6,14 @@ This folder contains the integration boundary between SpecTRL and the public Oct
 
 - Octopus Engine is not modified for SpecTRL.
 - SpecTRL remains fully functional when Octopus is unavailable.
-- The adapter is disabled by default.
+- The adapter is enabled by default in production and can be disabled with `VITE_OCTOPUS_ADAPTER_ENABLED=false`.
 - Network errors, invalid responses and timeouts are returned as adapter results; they must never block audio capture or the core SpecTRL UI.
 
 ## Environment variables
 
 ```env
 VITE_OCTOPUS_ADAPTER_ENABLED=false
-VITE_OCTOPUS_ADAPTER_ENDPOINT=https://example.test/octopus/events
+VITE_OCTOPUS_ADAPTER_ENDPOINT=https://octopus-engine-app.benoitlubert.workers.dev
 VITE_OCTOPUS_ADAPTER_TIMEOUT_MS=2500
 ```
 
@@ -36,4 +36,4 @@ void adapter.emit(event).then((result) => {
 });
 ```
 
-The current scaffold deliberately does not wire itself into the audio pipeline. The next step is to identify one stable observation boundary in SpecTRL and emit a single event from there, behind the feature flag.
+The application emits stabilized observations from its existing integration boundary. The adapter posts to `/mission` on the configured base URL. A network error must leave the local scan functional.
