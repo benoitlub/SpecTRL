@@ -139,7 +139,7 @@ export const UI_LABELS: typeof BASE_UI_LABELS = {
 export type { Lang, AnalysisState, AudioFeatures };
 export type AnimalId = "crow" | "pigeon" | "duck" | "cat" | "dog" | "owl";
 export type Animal = {
-  id: AnimalId;
+  id: string;
   name: string;
   scientificName: Record<Lang, string>;
   emoji: string;
