@@ -81,7 +81,7 @@ export class SpecTRLOctopusAdapter {
       authorizedResources: [],
     });
 
-    if (!result.ok) {
+    if (result.ok === false) {
       return {
         status: "failed",
         error: result.error,
